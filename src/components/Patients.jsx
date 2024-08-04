@@ -5,7 +5,8 @@ import {
   patientsList
 } from "../assets/mocks.jsx";
 import {
-  MagnifyingGlass
+  MagnifyingGlass,
+  Microphone
 } from "@phosphor-icons/react";
 import axios from 'axios';
 
@@ -16,16 +17,20 @@ export default function Patients() {
   const [filteredDoctors, setFilteredDoctors] = useState([]);
   const [specialty, setSpecialty] = useState('');
   const [patients, setPatients] = useState([]); // Add state for patients
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredPatients, setFilteredPatients] = useState([]);
 
   const handlePatientClick = (patient) => {
     setSelectedPatient(patient);
   };
+
 
   useEffect(() => {
     const fetchPatients = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/pacientes/patients');
         setPatients(response.data);
+        setFilteredPatients(response.data); // Inicialmente exibe todos os pacientes
       } catch (error) {
         console.error('Error fetching patients:', error);
       }
@@ -33,6 +38,18 @@ export default function Patients() {
 
     fetchPatients();
   }, []);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    const filtered = patients.filter(patient =>
+      patient.nomeCompleto.toLowerCase().includes(value.toLowerCase()) ||
+      patient.numeroIdentificacao.toString().includes(value)
+    );
+
+    setFilteredPatients(filtered);
+  };
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -229,6 +246,8 @@ export default function Patients() {
               width: "100%",
             }}
             placeholder="Pesquisar"
+            value={searchTerm}
+            onChange={handleSearchChange}
           />
         </div>
 
@@ -304,7 +323,7 @@ export default function Patients() {
               </tr>
             </thead>
             <tbody>
-              {patients.map((patient, index) => (
+              {filteredPatients.map((patient, index) => (
                 <tr key={index} onClick={() => handlePatientClick(patient)} style={{ cursor: "pointer" }}>
                   <td style={style.tableContentSpecial}>
                     <img

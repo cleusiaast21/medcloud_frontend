@@ -696,7 +696,6 @@ export default function PatientAppointment() {
             </div>
         </div>
 
-
     );
 }
 

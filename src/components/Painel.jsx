@@ -1,11 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import pfp from '../assets/userIcon.jpg';
 import {
     appointments,
-    waitingList
 } from "../assets/mocks.jsx";
+import axios from 'axios';
+
+
 export default function Painel() {
+
+    const [waitingList, setWaitingList] = useState([]);
+
+    useEffect(() => {
+        const fetchWaitingList = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/waitingList/retrieve');
+                console.log(response.data); // Log the data to inspect it
+
+                setWaitingList(response.data);
+            } catch (error) {
+                console.error('Error fetching waiting list:', error);
+            }
+        };
+
+        fetchWaitingList();
+    }, []);
 
 
     const style = {
@@ -136,17 +155,16 @@ export default function Painel() {
             <div style={style.waitingListContainer}>
                 <p style={{ marginLeft: 40 }}>Lista de Espera</p>
 
-                {waitingList.map((patient, index) => (
+                {waitingList.map((position, index) => (
                     <div style={style.waitingListPatient} key={index}>
-                        <img src={patient.pfp} style={style.pfp} alt="" />
-
                         <div style={{ display: "flex", flexDirection: "column" }}>
-                            <span style={style.patientName}>{patient.patient}</span>
-                            <span style={style.doctorName}>
-                                {patient.especialidade}
-                            </span>
+                            {position.pacienteId && (
+                                <span style={style.patientName}>{position.pacienteId.nomeCompleto}</span>
+                            )}
+                            {position.medicoId && (
+                                <span style={style.doctorName}>{position.medicoId.especialidade}</span>
+                            )}
                         </div>
-
                         <button style={style.button}>Encaminhar</button>
                     </div>
                 ))}
