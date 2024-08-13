@@ -90,6 +90,7 @@ export default function Patient() {
                 <img
                     style={{ width: 100, height: 100, borderRadius: "50%" }}
                     src={paciente.pfp}
+                    alt="profile"
                 />
 
                 <div style={{ marginLeft: 10 }}>
@@ -141,28 +142,6 @@ export default function Patient() {
                 </div>
             </div>
 
-            <div style={patient.containerP}>
-                <div style={patient.containerOutline}>
-                    <div style={patient.containerHeader}>
-                        <div style={patient.headerContent}>
-                            <span style={patient.headerText}>Seguradora</span>
-                            <div>
-                                <NotePencil size={25} color="#2DA9B5" />
-                                <CaretDown size={25} color="#2DA9B5" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style={{ padding: 5 }}>
-                        <span style={patient.attribute}>Nome: </span>
-                        <span style={patient.value}> {paciente.contactos}</span>
-                        <br />
-                        <span style={patient.attribute}>Plano: </span>
-                        <span style={patient.value}> {paciente.email}</span>
-                        <br />
-                    </div>
-                </div>
-            </div>
         </div>
     );
 

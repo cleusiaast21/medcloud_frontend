@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import pfp from '../assets/userIcon.jpg';
@@ -25,6 +26,11 @@ export default function Painel() {
 
         fetchWaitingList();
     }, []);
+
+    const handleForward = (patientId) => {
+        // Add logic to handle forwarding the patient
+        console.log("Forwarding patient, ${patientId}");
+    };
 
 
     const style = {
@@ -155,17 +161,13 @@ export default function Painel() {
             <div style={style.waitingListContainer}>
                 <p style={{ marginLeft: 40 }}>Lista de Espera</p>
 
-                {waitingList.map((position, index) => (
-                    <div style={style.waitingListPatient} key={index}>
+                {waitingList.map((position) => (
+                    <div style={style.waitingListPatient} key={position._id}>
                         <div style={{ display: "flex", flexDirection: "column" }}>
-                            {position.pacienteId && (
-                                <span style={style.patientName}>{position.pacienteId.nomeCompleto}</span>
-                            )}
-                            {position.medicoId && (
-                                <span style={style.doctorName}>{position.medicoId.especialidade}</span>
-                            )}
+                            <span style={style.patientName}>{position.pacienteNomeCompleto}</span>
+                            <span style={style.doctorName}>{position.medicoNomeCompleto} - {position.medicoEspecialidade}</span>
                         </div>
-                        <button style={style.button}>Encaminhar</button>
+                        <button style={style.button} onClick={() => handleForward(position.pacienteId)}>Encaminhar</button>
                     </div>
                 ))}
             </div>

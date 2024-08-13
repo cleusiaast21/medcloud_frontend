@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import pfp from '../assets/userIcon.jpg';
 import {
@@ -10,12 +10,123 @@ import {
     NotePencil,
     CaretDown,
     ListMagnifyingGlass,
+    Microphone
 } from "@phosphor-icons/react";
 
 export default function PatientAppointment() {
 
     const currentDate = new Date();
     const [selectedTab, setSelectedTab] = useState("Informações");
+    const [isRecording, setIsRecording] = useState(false);
+    const [subjectiveText, setSubjectiveText] = useState('');
+    const [recognition, setRecognition] = useState(null);
+    const [sintomas, setSintomas] = useState([]);
+
+    const sintomasList = ['dor de cabeça', 'dor de garganta', 'insônia', 'febre', 'vômitos', 'diarreia', 'tremores', 'tontura', 'cansaço', 'falta de apetite', 'perda de apetite', 'dores musculares', 'halucinações', 'enxaqueca', 'gripe', 'tosse', 'escarro'];
+
+    useEffect(() => {
+        if ('webkitSpeechRecognition' in window) {
+            const SpeechRecognition = window.webkitSpeechRecognition;
+            const recognitionInstance = new SpeechRecognition();
+            recognitionInstance.continuous = true;
+            recognitionInstance.interimResults = true;
+            recognitionInstance.lang = 'pt-BR';
+            recognitionInstance.onresult = (event) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+                if (finalTranscript) {
+                    setSubjectiveText((prevText) => prevText + ' ' + finalTranscript);
+                }
+            };
+            setRecognition(recognitionInstance);
+        } else {
+            alert('Seu navegador não suporta reconhecimento de voz.');
+        }
+    }, []);
+
+    const detectSintomas = (text) => {
+        const detectedSintomas = sintomasList.filter(sintoma => text.toLowerCase().includes(sintoma));
+        setSintomas([...new Set([...sintomas, ...detectedSintomas])]);
+    };
+
+    const handleSubjectiveChange = (event) => {
+        const newText = event.target.value;
+        setSubjectiveText(newText);
+        detectSintomas(newText);
+    };
+
+    const handleSave = () => {
+        detectSintomas();
+        // Implement any additional save functionality here
+    };
+
+    const toggleRecording = () => {
+        if (isRecording) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+        setIsRecording(!isRecording);
+    };
+
+    const [editMode, setEditMode] = useState({
+        vitals: false,
+        allergies: false,
+        chronic: false
+    });
+
+    const [vitals, setVitals] = useState({
+        heartRate: '',
+        respiratoryRate: '',
+        bloodPressure: '',
+        temperature: '',
+        weight: ''
+    });
+
+    const [allergies, setAllergies] = useState(['Diazepam', 'Dipirona']);
+    const [chronic, setChronic] = useState({ chronicDiseases: ['Asma'], familyHistory: ['Meningite'] });
+
+    const handleEditToggle = (section) => {
+        setEditMode((prev) => ({ ...prev, [section]: !prev[section] }));
+    };
+
+    const handleChange = (e, section, key, index) => {
+        const { value } = e.target;
+        if (section === 'vitals') {
+            setVitals((prev) => ({ ...prev, [key]: value }));
+        } else if (section === 'chronic') {
+            if (key === 'chronicDiseases' || key === 'familyHistory') {
+                setChronic((prev) => {
+                    const updatedArray = [...prev[key]];
+                    updatedArray[index] = value;
+                    return { ...prev, [key]: updatedArray };
+                });
+            }
+        }
+    };
+
+    const addAllergy = () => {
+        setAllergies((prev) => [...prev, '']);
+    };
+
+    const handleAllergyChange = (index, value) => {
+        const newAllergies = [...allergies];
+        newAllergies[index] = value;
+        setAllergies(newAllergies);
+    };
+
+    const addChronicDisease = () => {
+        setChronic((prev) => ({ ...prev, chronicDiseases: [...prev.chronicDiseases, ''] }));
+    };
+
+    const addFamilyHistory = () => {
+        setChronic((prev) => ({ ...prev, familyHistory: [...prev.familyHistory, ''] }));
+    };
+
 
     const handleTabClick = (tab) => {
         setSelectedTab(tab);
@@ -257,19 +368,71 @@ export default function PatientAppointment() {
                                     <div style={patient.headerContent}>
                                         <span style={patient.headerText}>Sinais Vitais</span>
                                         <div>
-                                            <NotePencil size={25} color="#2DA9B5" />
-                                            <CaretDown size={25} color="#2DA9B5" />
+                                            <NotePencil size={25} color="#2DA9B5" onClick={() => handleEditToggle('vitals')} style={{ cursor: 'pointer' }} />
+                                            <CaretDown size={25} color="#2DA9B5" style={{ cursor: 'pointer' }} />
                                         </div>
                                     </div>
                                 </div>
 
                                 <div style={{ padding: 5 }}>
-                                    <span style={patient.attribute}>Respiracao: </span>
-                                    <span style={patient.value}> {paciente.contactos}</span>
-                                    <br />
-                                    <span style={patient.attribute}>Batimentos cardiacos: </span>
-                                    <span style={patient.value}> {paciente.email}</span>
-                                    <br />
+                                    {editMode.vitals ? (
+                                        <div>
+                                            <label style={patient.attribute}>Frequência Cardíaca: </label>
+                                            <input
+                                                type="text"
+                                                value={vitals.heartRate}
+                                                onChange={(e) => handleChange(e, 'vitals', 'heartRate')}
+                                            />
+                                            <br />
+                                            <label style={patient.attribute}>Frequência Respiratória: </label>
+                                            <input
+                                                type="text"
+                                                value={vitals.respiratoryRate}
+                                                onChange={(e) => handleChange(e, 'vitals', 'respiratoryRate')}
+                                            />
+                                            <br />
+                                            <label style={patient.attribute}>Pressão Arterial: </label>
+                                            <input
+                                                type="text"
+                                                value={vitals.bloodPressure}
+                                                onChange={(e) => handleChange(e, 'vitals', 'bloodPressure')}
+                                            />
+                                            <br />
+                                            <label style={patient.attribute}>Temperatura: </label>
+                                            <input
+                                                type="text"
+                                                value={vitals.temperature}
+                                                onChange={(e) => handleChange(e, 'vitals', 'temperature')}
+                                            />
+                                            <br />
+                                            <label style={patient.attribute}>Peso: </label>
+                                            <input
+                                                type="text"
+                                                value={vitals.weight}
+                                                onChange={(e) => handleChange(e, 'vitals', 'weight')}
+                                            />
+                                            <br />
+                                            <button onClick={() => handleEditToggle('vitals')}>Salvar</button>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <span style={patient.attribute}>Frequência Cardíaca: </span>
+                                            <span style={patient.value}>{vitals.heartRate} bpm</span>
+                                            <br />
+                                            <span style={patient.attribute}>Frequência Respiratória: </span>
+                                            <span style={patient.value}>{vitals.respiratoryRate} mrm</span>
+                                            <br />
+                                            <span style={patient.attribute}>Pressão Arterial: </span>
+                                            <span style={patient.value}>{vitals.bloodPressure} mmHg</span>
+                                            <br />
+                                            <span style={patient.attribute}>Temperatura: </span>
+                                            <span style={patient.value}>{vitals.temperature} ºC</span>
+                                            <br />
+                                            <span style={patient.attribute}>Peso: </span>
+                                            <span style={patient.value}>{vitals.weight} kg</span>
+                                            <br />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -280,17 +443,37 @@ export default function PatientAppointment() {
                                     <div style={patient.headerContent}>
                                         <span style={patient.headerText}>Alergias</span>
                                         <div>
-                                            <NotePencil size={25} color="#2DA9B5" />
-                                            <CaretDown size={25} color="#2DA9B5" />
+                                            <NotePencil size={25} color="#2DA9B5" onClick={() => handleEditToggle('allergies')} style={{ cursor: 'pointer' }} />
+                                            <CaretDown size={25} color="#2DA9B5" style={{ cursor: 'pointer' }} />
                                         </div>
                                     </div>
                                 </div>
 
                                 <div style={{ padding: 5 }}>
-                                    <span style={patient.attribute}>Diazepam</span>
-                                    <br />
-                                    <span style={patient.attribute}>Dipirona</span>
-                                    <br />
+                                    {editMode.allergies ? (
+                                        <div>
+                                            {allergies.map((allergy, index) => (
+                                                <div key={index}>
+                                                    <input
+                                                        type="text"
+                                                        value={allergy}
+                                                        onChange={(e) => handleAllergyChange(index, e.target.value)}
+                                                    />
+                                                    <br />
+                                                </div>
+                                            ))}
+                                            <button onClick={addAllergy}>Adicionar Alergia</button>
+                                            <br />
+                                            <button onClick={() => handleEditToggle('allergies')}>Salvar</button>
+                                        </div>
+                                    ) : (
+                                        allergies.map((allergy, index) => (
+                                            <div key={index}>
+                                                <span style={patient.attribute}>{allergy}</span>
+                                                <br />
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -303,19 +486,57 @@ export default function PatientAppointment() {
                                             Doencas Cronicas e Historico Familiar
                                         </span>
                                         <div>
-                                            <NotePencil size={25} color="#2DA9B5" />
-                                            <CaretDown size={25} color="#2DA9B5" />
+                                            <NotePencil size={25} color="#2DA9B5" onClick={() => handleEditToggle('chronic')} style={{ cursor: 'pointer' }} />
+                                            <CaretDown size={25} color="#2DA9B5" style={{ cursor: 'pointer' }} />
                                         </div>
                                     </div>
                                 </div>
 
                                 <div style={{ padding: 5 }}>
-                                    <span style={patient.attribute}>Doencas Cronicas: </span>
-                                    <span style={patient.value}> Asma</span>
-                                    <br />
-                                    <span style={patient.attribute}>Historico Familiar: </span>
-                                    <span style={patient.value}> Meningite</span>
-                                    <br />
+                                    {editMode.chronic ? (
+                                        <div>
+                                            <label style={patient.attribute}>Doenças Crônicas: </label>
+                                            {chronic.chronicDiseases.map((disease, index) => (
+                                                <div key={index}>
+                                                    <input
+                                                        type="text"
+                                                        value={disease}
+                                                        onChange={(e) => handleChange(e, 'chronic', 'chronicDiseases', index)}
+                                                    />
+                                                    <br />
+                                                </div>
+                                            ))}
+                                            <button onClick={addChronicDisease}>Adicionar Doença Crônica</button>
+                                            <br />
+                                            <label style={patient.attribute}>Histórico Familiar: </label>
+                                            {chronic.familyHistory.map((history, index) => (
+                                                <div key={index}>
+                                                    <input
+                                                        type="text"
+                                                        value={history}
+                                                        onChange={(e) => handleChange(e, 'chronic', 'familyHistory', index)}
+                                                    />
+                                                    <br />
+                                                </div>
+                                            ))}
+                                            <button onClick={addFamilyHistory}>Adicionar Histórico Familiar</button>
+                                            <br />
+                                            <button onClick={() => handleEditToggle('chronic')}>Salvar</button>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <span style={patient.attribute}>Doenças Crônicas: </span>
+                                            {chronic.chronicDiseases.map((disease, index) => (
+                                                <span key={index} style={patient.value}>{disease}{index < chronic.chronicDiseases.length - 1 ? ', ' : ''}</span>
+                                            ))}
+                                            <br />
+                                            <span style={patient.attribute}>Histórico Familiar: </span>
+                                            {chronic.familyHistory.map((history, index) => (
+                                                <span key={index} style={patient.value}>{history}{index < chronic.familyHistory.length - 1 ? ', ' : ''}</span>
+                                            ))}
+                                            <br />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -382,20 +603,59 @@ export default function PatientAppointment() {
                         >
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <p>Subjectivo</p>
+
                                 <textarea
-                                    name=""
-                                    id=""
+                                    name="subjective"
+                                    id="subjective"
                                     style={{
                                         resize: "none",
-                                        width: "85%",
+                                        width: "82%",
                                         border: "0.5px solid rgba(80,80,80,0.2)",
                                         borderRadius: 5,
                                     }}
+                                    value={subjectiveText}
                                 ></textarea>
+                                <Microphone
+                                    size={18}
+                                    color={isRecording ? "red" : "black"}
+                                    style={{ cursor: 'pointer', padding: 0, margin: 0 }}
+                                    onClick={toggleRecording}
+                                />
                             </div>
+
+                            <button
+                                onClick={handleSave}
+                                style={{
+                                    background: "#2DA9B5",
+                                    border: "none",
+                                    padding: 5,
+                                    borderRadius: 5,
+                                    color: "white",
+                                    fontFamily: "Poppins",
+                                    fontWeight: 600,
+                                    marginTop: 10,
+                                    alignSelf: "flex-end",
+                                }}
+                            >
+                                Salvar
+                            </button>
 
                             <div>
                                 <p>Sintomas</p>
+                                {sintomas.map((sintoma, index) => (
+                                    <div key={index} style={{
+                                        display: 'inline-block',
+                                        background: '#2DA9B5',
+                                        borderRadius: '20px',
+                                        color: 'white',
+                                        padding: '5px 10px',
+                                        margin: '5px',
+                                        fontFamily: 'Poppins',
+                                        fontWeight: 600,
+                                    }}>
+                                        {sintoma} <span onClick={() => setSintomas(sintomas.filter(s => s !== sintoma))} style={{ cursor: 'pointer', marginLeft: '5px' }}>X</span>
+                                    </div>
+                                ))}
                             </div>
 
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
