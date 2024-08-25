@@ -23,54 +23,38 @@ export default function PatientAppointment() {
     const [sintomas, setSintomas] = useState([]);
 
     const sintomasList = ['dor de cabeça', 'dor de garganta', 'insônia', 'febre', 'vômitos', 'diarreia', 'tremores', 'tontura', 'cansaço', 'falta de apetite', 'perda de apetite', 'dores musculares', 'halucinações', 'enxaqueca', 'gripe', 'tosse', 'escarro'];
+    const [selectedTests, setSelectedTests] = useState({});
 
-    useEffect(() => {
-        if ('webkitSpeechRecognition' in window) {
-            const SpeechRecognition = window.webkitSpeechRecognition;
-            const recognitionInstance = new SpeechRecognition();
-            recognitionInstance.continuous = true;
-            recognitionInstance.interimResults = true;
-            recognitionInstance.lang = 'pt-BR';
-            recognitionInstance.onresult = (event) => {
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    }
-                }
-                if (finalTranscript) {
-                    setSubjectiveText((prevText) => prevText + ' ' + finalTranscript);
-                }
-            };
-            setRecognition(recognitionInstance);
-        } else {
-            alert('Seu navegador não suporta reconhecimento de voz.');
-        }
-    }, []);
-
-    const detectSintomas = (text) => {
-        const detectedSintomas = sintomasList.filter(sintoma => text.toLowerCase().includes(sintoma));
-        setSintomas([...new Set([...sintomas, ...detectedSintomas])]);
+    const handleCheckboxChange = (category, test) => {
+        setSelectedTests(prevState => ({
+            ...prevState,
+            [category]: {
+                ...prevState[category],
+                [test]: !prevState[category]?.[test],
+            }
+        }));
     };
 
+    const categories = {
+        Bioquimicas: [
+            'Glicemia em Jejum', 'Ureia', 'Colesterol Total', 'Amilase', 'F. Alcalina',
+            'Ácido Úrico', 'Triglicerídeos', 'HDL Colesterol', 'Proteína C Reativa', 'CK-MB',
+            'Triglicerídeos', 'LDL Colesterol', 'GOT/AST', 'Bilirrubina Total', 'Bilirrubina Directa', 'GGT'
+        ],
+        Urina: [
+            'Urina 2 (sumária)', 'Teste de Gravidez'
+        ],
+        Hematologia: [
+            'Amilase', 'F. Alcalina', 'Proteína C Reativa', 'CK-MB', 'GOT/AST', 'GGT'
+        ]
+    };
     const handleSubjectiveChange = (event) => {
-        const newText = event.target.value;
-        setSubjectiveText(newText);
-        detectSintomas(newText);
+        setSubjectiveText(event.target.value);
     };
 
-    const handleSave = () => {
-        detectSintomas();
-        // Implement any additional save functionality here
-    };
-
-    const toggleRecording = () => {
-        if (isRecording) {
-            recognition.stop();
-        } else {
-            recognition.start();
-        }
-        setIsRecording(!isRecording);
+    const detectSintomas = () => {
+        const detectedSintomas = sintomasList.filter(sintoma => subjectiveText.toLowerCase().includes(sintoma));
+        setSintomas([...new Set(detectedSintomas)]);
     };
 
     const [editMode, setEditMode] = useState({
@@ -603,42 +587,19 @@ export default function PatientAppointment() {
                         >
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <p>Subjectivo</p>
-
                                 <textarea
                                     name="subjective"
                                     id="subjective"
                                     style={{
                                         resize: "none",
-                                        width: "82%",
+                                        width: "85%",
                                         border: "0.5px solid rgba(80,80,80,0.2)",
                                         borderRadius: 5,
                                     }}
                                     value={subjectiveText}
+                                    onChange={handleSubjectiveChange}
                                 ></textarea>
-                                <Microphone
-                                    size={18}
-                                    color={isRecording ? "red" : "black"}
-                                    style={{ cursor: 'pointer', padding: 0, margin: 0 }}
-                                    onClick={toggleRecording}
-                                />
                             </div>
-
-                            <button
-                                onClick={handleSave}
-                                style={{
-                                    background: "#2DA9B5",
-                                    border: "none",
-                                    padding: 5,
-                                    borderRadius: 5,
-                                    color: "white",
-                                    fontFamily: "Poppins",
-                                    fontWeight: 600,
-                                    marginTop: 10,
-                                    alignSelf: "flex-end",
-                                }}
-                            >
-                                Salvar
-                            </button>
 
                             <div>
                                 <p>Sintomas</p>
@@ -653,7 +614,7 @@ export default function PatientAppointment() {
                                         fontFamily: 'Poppins',
                                         fontWeight: 600,
                                     }}>
-                                        {sintoma} <span onClick={() => setSintomas(sintomas.filter(s => s !== sintoma))} style={{ cursor: 'pointer', marginLeft: '5px' }}>X</span>
+                                        {sintoma} <span onClick={() => setSintomas(sintomas.filter(s => s !== sintoma))} style={{ cursor: 'pointer', marginLeft: '5px' }}>x</span>
                                     </div>
                                 ))}
                             </div>
@@ -689,7 +650,43 @@ export default function PatientAppointment() {
                     </div>
                 );
             case "Procedimentos":
-                return <div>Conteúdo de Procedimentos</div>;
+                return (
+
+                    <div style={patient.containerP}>
+                        <div style={patient.containerOutline}>
+                            {Object.keys(categories).map(category => (
+                                <div key={category}>
+                                    <div style={patient.containerHeader}>
+                                        <div style={patient.headerContent}>
+                                            <span style={patient.headerText}>{category}</span>
+                                        </div>
+                                    </div>
+
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(4, 1fr)',
+                                        gap: '10px',
+                                        margin: 10
+                                    }}>
+                                        {categories[category].map(test => (
+                                            <label key={test} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedTests[category]?.[test] || false}
+                                                    onChange={() => handleCheckboxChange(category, test)}
+                                                    style={{ accentColor: '#00a2c9' }}
+                                                />
+                                                {test}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+
+                );
             case "Diagnóstico":
                 return (
                     <div
@@ -849,7 +846,7 @@ export default function PatientAppointment() {
                                             <td style={pacientes.tableContent}>{currentDate.getDay() + '/' + currentDate.getMonth() + '/' + currentDate.getYear()}</td>
                                             <td style={pacientes.tableContent}>{medicamento.medicamento}</td>
                                             <td style={pacientes.tableContent}>{medicamento.quantidade}</td>
-                                            <td style={pacientes.tableContent}>{medicamento.intervalo}</td>
+                                            <td style={pacientes.tableContent}>{medicamento.intervalo}h</td>
                                             <td style={pacientes.tableContent}>
                                                 <X />
                                             </td>

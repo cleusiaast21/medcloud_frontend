@@ -5,6 +5,8 @@ import "@fontsource/poppins"; // Defaults to weight 400
 import { User, EyeSlash, Eye, Hospital } from "@phosphor-icons/react";
 import background from '../assets/loginBackground.png';
 import logo from '../assets/logo.png';
+import { useAuth } from '../AuthContext.js';
+
 
 function Login() {
 
@@ -113,6 +115,7 @@ function Login() {
       padding: 5,
       width: '80%',
       cursor: 'pointer',
+
     },
     logo: {
       width: '35%',
@@ -129,12 +132,6 @@ function Login() {
         <h1 style={style.welcome}>Bem-Vindo a Medcloud!</h1>
 
         <form onSubmit={handleLogin} style={{ width: '70%', marginBottom: 20 }}>
-
-          <label style={style.label}>Instituição</label>
-          <div style={style.inputContainer}>
-            <input style={style.input} placeholder='001'></input>
-            <Hospital color="#808080" size={20} />
-          </div>
 
           <label style={style.label}>Número de Identificação</label>
           <div style={style.inputContainer}>
@@ -153,6 +150,7 @@ function Login() {
               <EyeSlash color="#808080" size={20} onClick={togglePasswordVisibility} style={{ cursor: 'pointer' }} />
             )}
           </div>
+
           <button style={style.button} onClick={handleLogin}>LOGIN</button>
 
         </form>
