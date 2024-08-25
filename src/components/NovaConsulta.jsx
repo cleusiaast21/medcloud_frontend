@@ -105,48 +105,60 @@ export default function NovaConsulta() {
         e.preventDefault();
     
         try {
-          // Primeiro, cria o paciente
-          const pacienteRes = await axios.post('http://localhost:5000/api/pacientes', {
-            nomeCompleto: formData.nomeCompleto,
-            numeroIdentificacao: formData.numeroIdentificacao,
-            dataNascimento: formData.dataNascimento,
-            sexo: formData.sexo,
-            telefonePrincipal: formData.telefonePrincipal,
-            telefoneAlternativo: formData.telefoneAlternativo,
-            email: formData.email,
-          });
+            // Primeiro, cria o paciente
+            const pacienteRes = await axios.post('http://localhost:5000/api/pacientes', {
+                nomeCompleto: formData.nomeCompleto,
+                numeroIdentificacao: formData.numeroIdentificacao,
+                dataNascimento: formData.dataNascimento,
+                sexo: formData.sexo,
+                telefonePrincipal: formData.telefonePrincipal,
+                telefoneAlternativo: formData.telefoneAlternativo,
+                email: formData.email,
+            });
     
-          const pacienteId = pacienteRes.data._id;
+            const numeroIdentificacao = pacienteRes.data.numeroIdentificacao;
     
-          // Encontra o ID do médico selecionado
-          const selectedDoctor = doctors.find(doctor => doctor.nomeCompleto === formData.medico);
-          const medicoId = selectedDoctor ? selectedDoctor._id : null;
-
-          if (!medicoId) {
-              alert('Erro ao encontrar o médico selecionado');
-              return;
-          }
-
-          // Em seguida, cria a consulta associada ao paciente
-          const consultaRes = await axios.post('http://localhost:5000/api/consultas', {
-              specialty: formData.specialty,
-              medico: formData.medico,
-              pacienteId: pacienteId,
-          });
-
-          // Por fim, adiciona o paciente à lista de espera
-          await axios.post('http://localhost:5000/api/waitingList', {
-              pacienteId: pacienteId,
-              medicoId: medicoId,
-          });
-
-          alert('Dados registrados com sucesso');
-          
+            // Encontra o ID do médico selecionado
+            const selectedDoctor = doctors.find(doctor => doctor.nomeCompleto === formData.medico);
+            const funcionarioId = selectedDoctor ? selectedDoctor.funcionarioId : null;
+    
+            if (!funcionarioId) {
+                alert('Erro ao encontrar o médico selecionado');
+                return;
+            }
+    
+            // Em seguida, cria a consulta associada ao paciente
+            await axios.post('http://localhost:5000/api/consultas', {
+                specialty: formData.specialty,
+                medico: formData.medico,
+                pacienteId: numeroIdentificacao,
+                medicoId: funcionarioId,
+            });
+    
+            // Por fim, adiciona o paciente à lista de espera
+            await axios.post('http://localhost:5000/api/waitingList', {
+                pacienteId: numeroIdentificacao,
+                medicoId: funcionarioId,
+            });
+    
+            alert('Dados registrados com sucesso');
+    
         } catch (error) {
-          console.error('Erro ao registrar dados:', error);
-          alert('Erro ao registrar dados');
+            console.error('Erro ao registrar dados:', error);
+            if (error.response) {
+                console.error('Response data:', error.response.data);
+                console.error('Response status:', error.response.status);
+                console.error('Response headers:', error.response.headers);
+            } else if (error.request) {
+                console.error('Request data:', error.request);
+            } else {
+                console.error('Error message:', error.message);
+            }
+            alert('Erro ao registrar dados');
         }
-      };
+    };
+    
+    
 
     return (
 

@@ -3,23 +3,29 @@ import "@fontsource/poppins"; // Defaults to weight 400
 import pfp from '../assets/userIcon.jpg';
 import { useNavigate } from 'react-router-dom';
 import {
-  Question,
-  Gear,
-  SignOut,
+    Question,
+    Gear,
+    SignOut,
 } from "@phosphor-icons/react";
+import { useAuth } from '../AuthContext'; // Import your AuthContext
 
 export default function Header({ selectedOption }) {
     const [menuVisible, setMenuVisible] = useState(false);
+    const { state } = useAuth(); 
+    const { dispatch } = useAuth();
     const navigate = useNavigate();
+
 
     const toggleMenu = () => {
         setMenuVisible(!menuVisible);
     };
 
-    const handleLogout = () => {
-        
-        navigate('/login');
-    };
+
+    function handleLogout() {
+        dispatch({ type: 'LOGOUT' });
+        localStorage.removeItem('userInfo');
+        navigate('/');
+    }
 
     const style = {
         container: {
@@ -99,8 +105,8 @@ export default function Header({ selectedOption }) {
             <p style={style.option}>{selectedOption}</p>
             <div style={{ display: 'flex', width: '20%', alignItems: 'center', margin: 5 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'right', width: '80%', marginRight: 10, fontSize: 10, fontWeight: 900 }}>
-                    <p style={{ margin: 0 }}>Cleusia Tchisolyukombe</p>
-                    <p style={{ margin: 0 }}>Recepcionista</p>
+                    <p style={{ margin: 0 }}>{state.user.nomeCompleto}</p>
+                    <p style={{ margin: 0 }}>{state.user.employeeType}</p>
                 </div>
                 <img style={style.pfp} src={pfp} alt="" onClick={toggleMenu} />
             </div>
@@ -137,7 +143,7 @@ export default function Header({ selectedOption }) {
                         onMouseLeave={handleMouseLeave}
                         onClick={handleLogout}
                     >
-                        <SignOut size={20}  style={{ ...style.icon, ...style.signOut }} />
+                        <SignOut size={20} style={{ ...style.icon, ...style.signOut }} />
                         <span style={{ ...style.text, ...style.signOut }}>Sair</span>
                     </div>
                 </div>

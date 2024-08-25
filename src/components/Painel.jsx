@@ -6,31 +6,45 @@ import {
     appointments,
 } from "../assets/mocks.jsx";
 import axios from 'axios';
+import { useAuth } from '../AuthContext'; // Import your AuthContext
 
 
 export default function Painel() {
-
     const [waitingList, setWaitingList] = useState([]);
+    const { state } = useAuth();
+    const funcionarioId = state.user.funcionarioId;
+    const [patients, setPatients] = useState({}); // State to store patient details
 
     useEffect(() => {
         const fetchWaitingList = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/waitingList/retrieve');
-                console.log(response.data); // Log the data to inspect it
+                const response = await axios.get('http://localhost:5000/api/waitingList/retrieveSpecific', {
+                    params: { medicoId: funcionarioId } // Ensure your backend supports this parameter
+                });
+                const waitingListData = response.data;
+                setWaitingList(waitingListData);
 
-                setWaitingList(response.data);
+                // Fetch patient details for each waiting list entry
+                const patientRequests = waitingListData.map(position =>
+                    axios.get(`http://localhost:5000/api/pacientes/getPaciente/${position.pacienteId}`) // Adjust endpoint as needed
+                );
+
+                const patientResponses = await Promise.all(patientRequests);
+                const patientData = patientResponses.reduce((acc, curr) => {
+                    acc[curr.data._id] = curr.data;
+                    return acc;
+                }, {});
+
+                setPatients(patientData);
+                console.log(patientData)
             } catch (error) {
-                console.error('Error fetching waiting list:', error);
+                console.error('Error fetching waiting list or patient details:', error);
             }
         };
 
         fetchWaitingList();
-    }, []);
+    }, [funcionarioId]);
 
-    const handleForward = (patientId) => {
-        // Add logic to handle forwarding the patient
-        console.log("Forwarding patient, ${patientId}");
-    };
 
 
     const style = {
@@ -125,7 +139,6 @@ export default function Painel() {
     };
 
     return (
-
         <div style={style.containersList}>
             <div style={style.appointmentsContainer}>
                 <p>Marcações para hoje</p>
@@ -161,17 +174,27 @@ export default function Painel() {
             <div style={style.waitingListContainer}>
                 <p style={{ marginLeft: 40 }}>Lista de Espera</p>
 
-                {waitingList.map((position) => (
-                    <div style={style.waitingListPatient} key={position._id}>
-                        <div style={{ display: "flex", flexDirection: "column" }}>
-                            <span style={style.patientName}>{position.pacienteNomeCompleto}</span>
-                            <span style={style.doctorName}>{position.medicoNomeCompleto} - {position.medicoEspecialidade}</span>
+                {waitingList.map((position) => {
+                    // Debugging line to ensure IDs are correct
+                    console.log('Waiting List Position:', position);
+
+                    // Fetch patient data
+                    const patient = patients[position.pacienteId];
+
+                    // Debugging line to check if patient data is found
+                    console.log('Patient Data for ID:', position.pacienteId, patient);
+
+                    return (
+                        <div style={style.waitingListPatient} key={position._id}>
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                <span style={style.patientName}>{patient ? patient.nomeCompleto : 'Nome não disponível'}</span>
+                                <span style={style.doctorName}>{position.medicoNomeCompleto}</span>
+                            </div>
+                            <button style={style.button}>Atender</button>
                         </div>
-                        <button style={style.button} onClick={() => handleForward(position.pacienteId)}>Encaminhar</button>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
-
     );
 }

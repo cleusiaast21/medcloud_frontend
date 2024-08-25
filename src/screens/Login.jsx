@@ -14,6 +14,7 @@ function Login() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const { dispatch } = useAuth();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -40,20 +41,48 @@ function Login() {
     checkInternetConnection();
   }, []);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // Example of Axios request in Login.jsx
+  const handleLogin = async (event) => {
+    event.preventDefault(); // Prevent form submission from reloading the page
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
-        id,
-        password
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        funcionarioId: id,
+        password: password
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
-      console.log(res.data);
-      navigate('/home'); // Redirect to the home page upon successful login
-
-    } catch (err) {
-      console.error(err);
+  
+      const { token, employee } = response.data;
+      console.log('Login successful:', employee);
+  
+      // Store token and employee info in localStorage or context if needed
+      localStorage.setItem('token', token);
+      localStorage.setItem('employee', JSON.stringify(employee));
+  
+      // Dispatch action and navigate based on employeeType
+      dispatch({
+        type: 'LOGIN',
+        payload: employee,
+      });
+  
+      if (employee.employeeType === 'Recepcionista') {
+        navigate('/homeR');
+      } else if (employee.employeeType === 'Medico') {
+        navigate('/home');
+      } else if (employee.employeeType === 'Administrador') {
+        navigate('/homeAdm');
+      } else if (employee.employeeType === 'Tecnico de Laboratorio') {
+        navigate('/homeTecnico');
+      }
+    } catch (error) {
+      console.error('Login error:', error.response?.data || error.message);
     }
   };
+  
+
+
 
   const style = {
     container: {
