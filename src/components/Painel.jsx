@@ -7,45 +7,54 @@ import {
 } from "../assets/mocks.jsx";
 import axios from 'axios';
 import { useAuth } from '../AuthContext'; // Import your AuthContext
-
+import PatientAppointment from './PatientAppointment.jsx';
 
 export default function Painel() {
     const [waitingList, setWaitingList] = useState([]);
     const { state } = useAuth();
     const funcionarioId = state.user.funcionarioId;
     const [patients, setPatients] = useState({}); // State to store patient details
+    const [selectedPatient, setSelectedPatient] = useState(null); // State for selected patient
 
     useEffect(() => {
         const fetchWaitingList = async () => {
             try {
                 const response = await axios.get('http://localhost:5000/api/waitingList/retrieveSpecific', {
-                    params: { medicoId: funcionarioId } // Ensure your backend supports this parameter
+                    params: { medicoId: funcionarioId }
                 });
                 const waitingListData = response.data;
                 setWaitingList(waitingListData);
-
+    
                 // Fetch patient details for each waiting list entry
-                const patientRequests = waitingListData.map(position =>
-                    axios.get(`http://localhost:5000/api/pacientes/getPaciente/${position.pacienteId}`) // Adjust endpoint as needed
+                const patientRequests = waitingListData.map(position => 
+                    axios.get(`http://localhost:5000/api/pacientes/getPaciente/${position.pacienteId}`)
                 );
-
+    
                 const patientResponses = await Promise.all(patientRequests);
                 const patientData = patientResponses.reduce((acc, curr) => {
-                    acc[curr.data._id] = curr.data;
+                    const paciente = curr.data;
+                    console.log(`Fetched Patient:`, paciente); // Debugging line
+                    acc[paciente.numeroIdentificacao] = paciente; // Use numeroIdentificacao as the key
                     return acc;
                 }, {});
-
+    
+                console.log('Final Patient Data:', patientData); // Log the full patient data object
                 setPatients(patientData);
-                console.log(patientData)
             } catch (error) {
                 console.error('Error fetching waiting list or patient details:', error);
             }
         };
-
+    
         fetchWaitingList();
     }, [funcionarioId]);
 
+    const handleAtenderClick = (pacienteId) => {
+        setSelectedPatient(patients[pacienteId]);
+    };
 
+    if (selectedPatient) {
+        return <PatientAppointment paciente={selectedPatient} />;
+    }
 
     const style = {
         container: {
@@ -118,6 +127,8 @@ export default function Painel() {
             borderColor: "#2DA9B5",
             padding: 10,
             border: "none",
+            margin: 5,
+            cursor: 'pointer'
         },
         waitingListPatient: {
             display: "flex",
@@ -129,7 +140,7 @@ export default function Painel() {
             borderBottom: "0.5px solid #cfcfcf",
         },
         patientName: {
-            fontSize: 12,
+            fontSize: 14
         },
         doctorName: {
             fontSize: 11,
@@ -175,14 +186,9 @@ export default function Painel() {
                 <p style={{ marginLeft: 40 }}>Lista de Espera</p>
 
                 {waitingList.map((position) => {
-                    // Debugging line to ensure IDs are correct
-                    console.log('Waiting List Position:', position);
 
                     // Fetch patient data
                     const patient = patients[position.pacienteId];
-
-                    // Debugging line to check if patient data is found
-                    console.log('Patient Data for ID:', position.pacienteId, patient);
 
                     return (
                         <div style={style.waitingListPatient} key={position._id}>
@@ -190,7 +196,7 @@ export default function Painel() {
                                 <span style={style.patientName}>{patient ? patient.nomeCompleto : 'Nome não disponível'}</span>
                                 <span style={style.doctorName}>{position.medicoNomeCompleto}</span>
                             </div>
-                            <button style={style.button}>Atender</button>
+                            <button style={style.button} onClick={() => handleAtenderClick(position.pacienteId)}>Atender</button>
                         </div>
                     );
                 })}
