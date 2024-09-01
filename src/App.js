@@ -5,6 +5,7 @@ import Home from './screens/Home';
 import Register from './screens/Register';
 import Employee from './screens/EmployeeRegistration';
 import Error from './screens/AccessDenied.js';
+import ModelTest from './screens/ModelTest.js';
 import { AuthProvider } from './AuthContext';
 import { useAuth } from './AuthContext.js';
 
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/employeeregistration" element={<Employee />} />
+          <Route path="/model" element={<ModelTest />} />
           </Routes>
 
       </Router>

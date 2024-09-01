@@ -12,6 +12,11 @@ import {
     ListMagnifyingGlass,
     Microphone
 } from "@phosphor-icons/react";
+import Select from 'react-select';
+import { symptomOptions } from '../assets/auxiliaryData.jsx';
+import { categories } from '../assets/auxiliaryData.jsx';
+import axios from 'axios';
+
 
 export default function PatientAppointment({ paciente }) {
 
@@ -20,9 +25,29 @@ export default function PatientAppointment({ paciente }) {
     const [subjectiveText, setSubjectiveText] = useState('');
     const [objectivoText, setObjectivoText] = useState("");
     const [notasText, setNotasText] = useState("");
-    const [sintomas, setSintomas] = useState([]);
-
+    const [selectedSymptoms, setSelectedSymptoms] = useState([]);
+    const [predictions, setPredictions] = useState(null);
     const [selectedProcedures, setSelectedProcedures] = useState({});
+
+    const handleSelectChange = (selectedOptions) => {
+        // Convert selected options to an array of symptom names
+        const symptoms = selectedOptions.reduce((acc, option) => {
+            acc[option.value] = 1;
+            return acc;
+        }, {});
+
+        setSelectedSymptoms(symptoms);
+    };
+
+    const handleSubmit = async () => {
+        try {
+            const response = await axios.post('http://localhost:5001/predict', { symptoms: selectedSymptoms });
+            setPredictions(response.data);
+        } catch (error) {
+            console.error('Error fetching predictions:', error);
+        }
+    };
+
 
     // Handle checkbox changes
     const handleProcedureChange = (category, procedure) => {
@@ -45,7 +70,6 @@ export default function PatientAppointment({ paciente }) {
         setVisibleSections((prev) => ({ ...prev, [section]: !prev[section] }));
     };
 
-    const sintomasList = ['dor de cabeça', 'dor de garganta', 'insónia', 'febre', 'vómitos', 'diarreia', 'tremores', 'tontura', 'cansaço', 'falta de apetite', 'perda de apetite', 'dores musculares', 'halucinações', 'enxaqueca', 'gripe', 'tosse', 'escarro'];
     const [selectedTests, setSelectedTests] = useState({});
 
     const handleCheckboxChange = (category, test) => {
@@ -56,20 +80,6 @@ export default function PatientAppointment({ paciente }) {
                 [test]: !prevState[category]?.[test],
             }
         }));
-    };
-
-    const categories = {
-        Bioquimicas: [
-            'Glicemia em Jejum', 'Ureia', 'Colesterol Total', 'Amilase', 'F. Alcalina',
-            'Ácido Úrico', 'Triglicerídeos', 'HDL Colesterol', 'Proteína C Reativa', 'CK-MB',
-            'Triglicerídeos', 'LDL Colesterol', 'GOT/AST', 'Bilirrubina Total', 'Bilirrubina Directa', 'GGT'
-        ],
-        Urina: [
-            'Urina 2 (sumária)', 'Teste de Gravidez'
-        ],
-        Hematologia: [
-            'Amilase', 'F. Alcalina', 'Proteína C Reativa', 'CK-MB', 'GOT/AST', 'GGT'
-        ]
     };
 
     const handleSubjectiveChange = (event) => {
@@ -147,19 +157,6 @@ export default function PatientAppointment({ paciente }) {
         const currentIndex = tabs.indexOf(selectedTab);
         const nextIndex = (currentIndex + 1) % tabs.length;
         setSelectedTab(tabs[nextIndex]);
-
-        if (selectedTab === "Consulta") {
-            // Match symptoms in the subjective text
-            const identifiedSymptoms = sintomasList.filter(sintoma =>
-                subjectiveText.toLowerCase().includes(sintoma)
-            );
-
-            // If there are any symptoms found, alert them and save them in state
-            if (identifiedSymptoms.length > 0) {
-                setSintomas(identifiedSymptoms); // Save the identified symptoms
-                alert(`Sintomas identificados: ${identifiedSymptoms.join(", ")}`);
-            }
-        }
     };
 
     const handlePreviousClick = () => {
@@ -383,6 +380,46 @@ export default function PatientAppointment({ paciente }) {
             margin: 4,
             cursor: "pointer",
         },
+    };
+
+    const customStyles = {
+        control: (provided, state) => ({
+            ...provided,
+            border: state.isFocused ? '2px solid #2DA9B5' : '0.5px solid rgba(80,80,80,0.2)', // Border color when focused
+            boxShadow: state.isFocused ? '0 0 5px rgba(0, 123, 255, 0.2)' : 'none', // Shadow effect on focus
+            '&:hover': {
+                borderColor: '#2DA9B5', // Border color on hover
+            },
+            borderRadius: 5,
+            fontSize: 13,
+            width:'99%',
+            marginLeft: 11
+        }),
+        option: (provided, state) => ({
+            ...provided,
+            backgroundColor: state.isSelected ? '#2DA9B5' : state.isFocused ? '#e6f7ff' : 'white', // Background color for selected and focused options
+            color: state.isSelected ? 'white' : '#333', // Text color for selected option
+            padding: 2,
+        }),
+        multiValue: (provided) => ({
+            ...provided,
+            backgroundColor: '#2DA9B5', // Background color for selected options
+            color: 'white',
+            borderRadius: '5px',
+            padding: '3px 5px',
+        }),
+        multiValueLabel: (provided) => ({
+            ...provided,
+            color: 'white', // Text color for selected options
+        }),
+        multiValueRemove: (provided) => ({
+            ...provided,
+            color: 'white', // Text color for remove icon
+            '&:hover': {
+                backgroundColor: '#cc4c4c',
+                color: 'white',
+            },
+        }),
     };
 
     const renderTabContent = () => {
@@ -697,8 +734,40 @@ export default function PatientAppointment({ paciente }) {
                                     onChange={handleObjectivoChange}
                                 ></textarea>
                             </div>
+
+
+                            <div style={{ display: "flex", justifyContent: 'space-between', alignItems: "center" }}>
+                                <p style={{ margin: '0 10px 0 0', minWidth: '80px' }}>Sintomas</p>
+                                <div style={{ flex: 1, justifyContent:'flex-end'}}>
+                                    <Select
+                                        isMulti
+                                        name="symptoms"
+                                        options={symptomOptions}
+                                        onChange={handleSelectChange}
+                                        placeholder="Selecione os sintomas..."
+                                        styles={customStyles}
+                                    />
+                                </div>
+                            </div>
+
+
+
+                            {predictions && (
+                                <div>
+                                    <h2>Predições:</h2>
+                                    <ul>
+                                        {Object.keys(predictions).map((disease) => (
+                                            <li key={disease}>
+                                                {disease}: {predictions[disease] === 1 ? 'Positivo' : 'Negativo'}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+
                         </div>
-                    </div>
+                    </div >
                 );
             case "Procedimentos":
                 return (
