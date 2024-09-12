@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
-import pfp from '../assets/userIcon.jpg';
 import {
-    paciente,
     medicamentos
 } from "../assets/mocks.jsx";
 import {
@@ -10,13 +8,13 @@ import {
     NotePencil,
     CaretDown,
     ListMagnifyingGlass,
-    Microphone
 } from "@phosphor-icons/react";
 import Select from 'react-select';
 import { symptomOptions } from '../assets/auxiliaryData.jsx';
 import { categories } from '../assets/auxiliaryData.jsx';
 import axios from 'axios';
-
+import Receita from './Receita.js';
+import Procedimentos from './Procedimentos.js';
 
 export default function PatientAppointment({ paciente }) {
 
@@ -28,6 +26,61 @@ export default function PatientAppointment({ paciente }) {
     const [selectedSymptoms, setSelectedSymptoms] = useState([]);
     const [predictions, setPredictions] = useState(null);
     const [selectedProcedures, setSelectedProcedures] = useState({});
+    const [positivePredictions, setPositivePredictions] = useState([]);
+    const [selectedExams, setSelectedExams] = useState([]);
+    const [visibleSections, setVisibleSections] = useState({
+        vitals: true,
+        anamnese: true
+    });
+    const [comments, setComments] = useState({
+        dst: '',
+        doencas: '',
+        alergias: '',
+        cirurgias: '',
+        internamentos: '',
+        medicacao: '',
+        antecedentes: ''
+    });
+
+    const [acceptedDiseases, setAcceptedDiseases] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [diseaseInput, setDiseaseInput] = useState("");
+    const [modifiedDiseases, setModifiedDiseases] = useState([]);
+
+    const handleAccept = () => {
+        setAcceptedDiseases(positivePredictions);
+    };
+
+    const handleSelectedExamsChange = (exams) => {
+        setSelectedExams(exams);
+        console.log('Selected Exams:', selectedExams);
+    };
+
+    const handleReject = () => {
+        setPositivePredictions([]); // Empty positivePredictions
+        setAcceptedDiseases([]); // Clear accepted diseases
+    };
+
+    const handleModify = () => {
+        setShowModal(true);
+        setModifiedDiseases([...acceptedDiseases]); // Initialize with accepted diseases
+    };
+
+    const handleSave = () => {
+        setAcceptedDiseases(modifiedDiseases);
+        setShowModal(false);
+    };
+
+    const handleDelete = (diseaseToDelete) => {
+        setModifiedDiseases(modifiedDiseases.filter((disease) => disease !== diseaseToDelete));
+    };
+
+    const handleAddDisease = () => {
+        if (diseaseInput.trim() && !modifiedDiseases.includes(diseaseInput)) {
+            setModifiedDiseases([...modifiedDiseases, diseaseInput.trim()]);
+            setDiseaseInput(""); // Clear the input field after adding
+        }
+    };
 
     const handleSelectChange = (selectedOptions) => {
         // Convert selected options to an array of symptom names
@@ -39,48 +92,73 @@ export default function PatientAppointment({ paciente }) {
         setSelectedSymptoms(symptoms);
     };
 
+    const handleExamSelection = (selectedExams) => {
+        setSelectedExams(selectedExams);
+    };
+    
+
+    const handleUpdateConsulta = async (consultaId) => {
+        const consultaData = {
+            subjectiveText,
+            objectivoText,
+            notasText,
+            selectedSymptoms,
+            selectedProcedures,
+            positivePredictions,
+            acceptedDiseases,
+            comments,
+            selectedExams // Include this line
+        };
+    
+        try {
+            const response = await fetch(`/consulta/${consultaId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(consultaData),
+            });
+    
+            if (response.ok) {
+                const updatedConsulta = await response.json();
+                console.log('Consulta updated:', updatedConsulta);
+                // Handle success, e.g., show a success message or redirect
+            } else {
+                console.error('Failed to update consulta');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+    
+    
+
     const handleSubmit = async () => {
         try {
             const response = await axios.post('http://localhost:5001/predict', { symptoms: selectedSymptoms });
-            setPredictions(response.data);
+            const data = response.data;
+            setPredictions(data);
+
+            // Filter positive predictions and save to positivePredictions
+            const positives = Object.keys(data).filter(disease => data[disease] === 1);
+            setPositivePredictions(positives);
+            console.log(positives)
         } catch (error) {
             console.error('Error fetching predictions:', error);
         }
     };
-
-
-    // Handle checkbox changes
-    const handleProcedureChange = (category, procedure) => {
-        setSelectedProcedures(prevState => ({
+    const handleCommentChange = (event, field) => {
+        const value = event.target.value;
+        setComments(prevState => ({
             ...prevState,
-            [category]: {
-                ...prevState[category],
-                [procedure]: !prevState[category]?.[procedure]
-            }
+            [field]: value
         }));
     };
-
-    const [visibleSections, setVisibleSections] = useState({
-        vitals: true,
-        allergies: true,
-        chronic: true,
-    });
 
     const handleVisibilityToggle = (section) => {
         setVisibleSections((prev) => ({ ...prev, [section]: !prev[section] }));
     };
 
-    const [selectedTests, setSelectedTests] = useState({});
-
-    const handleCheckboxChange = (category, test) => {
-        setSelectedTests(prevState => ({
-            ...prevState,
-            [category]: {
-                ...prevState[category],
-                [test]: !prevState[category]?.[test],
-            }
-        }));
-    };
 
     const handleSubjectiveChange = (event) => {
         setSubjectiveText(event.target.value);
@@ -107,8 +185,6 @@ export default function PatientAppointment({ paciente }) {
         weight: ''
     });
 
-    const [allergies, setAllergies] = useState(['Diazepam', 'Dipirona']);
-    const [chronic, setChronic] = useState({ chronicDiseases: ['Asma'], familyHistory: ['Meningite'] });
 
     const handleEditToggle = (section) => {
         setEditMode((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -118,35 +194,10 @@ export default function PatientAppointment({ paciente }) {
         const { value } = e.target;
         if (section === 'vitals') {
             setVitals((prev) => ({ ...prev, [key]: value }));
-        } else if (section === 'chronic') {
-            if (key === 'chronicDiseases' || key === 'familyHistory') {
-                setChronic((prev) => {
-                    const updatedArray = [...prev[key]];
-                    updatedArray[index] = value;
-                    return { ...prev, [key]: updatedArray };
-                });
-            }
+        } else if (section === 'anamese') {
+
         }
     };
-
-    const addAllergy = () => {
-        setAllergies((prev) => [...prev, '']);
-    };
-
-    const handleAllergyChange = (index, value) => {
-        const newAllergies = [...allergies];
-        newAllergies[index] = value;
-        setAllergies(newAllergies);
-    };
-
-    const addChronicDisease = () => {
-        setChronic((prev) => ({ ...prev, chronicDiseases: [...prev.chronicDiseases, ''] }));
-    };
-
-    const addFamilyHistory = () => {
-        setChronic((prev) => ({ ...prev, familyHistory: [...prev.familyHistory, ''] }));
-    };
-
 
     const handleTabClick = (tab) => {
         setSelectedTab(tab);
@@ -154,9 +205,15 @@ export default function PatientAppointment({ paciente }) {
 
     const handleNextClick = () => {
         const tabs = ["Informações", "Consulta", "Procedimentos", "Diagnóstico", "Receita"];
+
+        if (selectedTab === "Consulta")
+            handleSubmit();
+
         const currentIndex = tabs.indexOf(selectedTab);
         const nextIndex = (currentIndex + 1) % tabs.length;
         setSelectedTab(tabs[nextIndex]);
+
+
     };
 
     const handlePreviousClick = () => {
@@ -295,60 +352,19 @@ export default function PatientAppointment({ paciente }) {
             border: "1.5px solid rgba(128,128,128,0.2)",
             borderRadius: 5,
             fontFamily: 'Poppins'
+        },
+        comment: {
+            marginLeft: '10px',
+            border: "0.5px solid #cfcfcf",
+            borderRadius: 5,
+            width: '68%',
+            padding: 3
+        },
+        anamneseItem: {
+            width: '100%',
         }
     };
 
-    const pacientes = {
-        tableTitle: {
-            color: "#2DA9B5",
-            fontWeight: "Normal",
-            fontSize: 12,
-        },
-
-        tableContent: {
-            color: "#525252",
-            fontWeight: "Normal",
-            fontSize: 12,
-            padding: 15,
-            borderBottom: "0.5px solid #cfcfcf",
-            textAlign: "center",
-        },
-        tableTitles: {
-            borderBottom: "0.5px solid #cfcfcf",
-            padding: 10,
-            margin: 10,
-        },
-        previousButton: {
-            marginRight: 10,
-            padding: "5px 10px",
-            border: "none",
-            borderRadius: 5,
-            backgroundColor: "#fff",
-            color: "#c4c4c4",
-            fontFamily: "Poppins",
-            cursor: "pointer",
-        },
-        nextButton: {
-            marginLeft: 10,
-            padding: "5px 10px",
-            border: "none",
-            borderRadius: 5,
-            backgroundColor: "#fff",
-            color: "#2DA9B5",
-            fontFamily: "Poppins",
-            cursor: "pointer",
-        },
-        numericalButton: {
-            margin: "0 10px",
-            padding: "5px 10px",
-            border: "none",
-            borderRadius: 5,
-            backgroundColor: "#2DA9B5",
-            color: "white",
-            fontFamily: "Poppins",
-            cursor: "pointer",
-        },
-    };
 
     const diagnostico = {
         button: {
@@ -380,6 +396,15 @@ export default function PatientAppointment({ paciente }) {
             margin: 4,
             cursor: "pointer",
         },
+        modifyButton: {
+            fontFamily: "Poppins",
+            borderRadius: 8,
+            color: "white",
+            border: "none",
+            background: "orange",
+            margin: 4,
+            cursor: "pointer",
+        },
     };
 
     const customStyles = {
@@ -392,7 +417,7 @@ export default function PatientAppointment({ paciente }) {
             },
             borderRadius: 5,
             fontSize: 13,
-            width:'99%',
+            width: '99%',
             marginLeft: 11
         }),
         option: (provided, state) => ({
@@ -438,6 +463,7 @@ export default function PatientAppointment({ paciente }) {
                                         </div>
                                     </div>
                                 </div>
+
                                 {visibleSections.vitals && (
 
                                     <div style={{ padding: 5 }}>
@@ -513,116 +539,109 @@ export default function PatientAppointment({ paciente }) {
                             <div style={patient.containerOutline}>
                                 <div style={patient.containerHeader}>
                                     <div style={patient.headerContent}>
-                                        <span style={patient.headerText}>Alergias</span>
-                                        <div>
-                                            <NotePencil size={25} color="#2DA9B5" onClick={() => handleEditToggle('allergies')} style={{ cursor: 'pointer' }} />
-                                            <CaretDown size={25} color="#2DA9B5" onClick={() => handleVisibilityToggle('allergies')} style={{ cursor: 'pointer' }} />
-                                        </div>
-                                    </div>
-                                </div>
-                                {visibleSections.allergies && (
-                                    <div style={{ padding: 5 }}>
-                                        {editMode.allergies ? (
-                                            <div>
-                                                {allergies.map((allergy, index) => (
-                                                    <div key={index}>
-                                                        <input
-                                                            type="text"
-                                                            value={allergy}
-                                                            style={patient.input}
-                                                            onChange={(e) => handleAllergyChange(index, e.target.value)}
-                                                        />
-                                                        <br />
-                                                    </div>
-                                                ))}
-
-                                                <div style={{ display: 'flex', marginTop: 3 }}>
-
-                                                    <button style={diagnostico.button} onClick={addAllergy}>Adicionar Alergia</button>
-                                                    <br />
-                                                    <button style={diagnostico.button} onClick={() => handleEditToggle('allergies')}>Salvar</button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            allergies.map((allergy, index) => (
-                                                <div key={index}>
-                                                    <span style={patient.attribute}>{allergy}</span>
-                                                    <br />
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div style={patient.containerP}>
-                            <div style={patient.containerOutline}>
-                                <div style={patient.containerHeader}>
-                                    <div style={patient.headerContent}>
                                         <span style={patient.headerText}>
-                                            Doencas Cronicas e Historico Familiar
+                                            Anamnese
                                         </span>
                                         <div>
-                                            <NotePencil size={25} color="#2DA9B5" onClick={() => handleEditToggle('chronic')} style={{ cursor: 'pointer' }} />
-                                            <CaretDown size={25} color="#2DA9B5" onClick={() => handleVisibilityToggle('chronic')} style={{ cursor: 'pointer' }} />
+                                            <NotePencil size={25} color="#2DA9B5" onClick={() => handleEditToggle('anamnese')} style={{ cursor: 'pointer' }} />
+                                            <CaretDown size={25} color="#2DA9B5" onClick={() => handleVisibilityToggle('anamnese')} style={{ cursor: 'pointer' }} />
                                         </div>
                                     </div>
                                 </div>
-                                {visibleSections.chronic && (
 
-                                    <div style={{ padding: 5 }}>
-                                        {editMode.chronic ? (
-                                            <div>
-                                                <label style={patient.attribute}>Doenças Crônicas: </label>
-                                                {chronic.chronicDiseases.map((disease, index) => (
-                                                    <div key={index}>
-                                                        <input
-                                                            type="text"
-                                                            value={disease}
-                                                            style={patient.input}
-                                                            onChange={(e) => handleChange(e, 'chronic', 'chronicDiseases', index)}
-                                                        />
-                                                        <br />
-                                                    </div>
-                                                ))}
-                                                <button style={diagnostico.button} onClick={addChronicDisease}>Adicionar Doença Crônica</button>
-                                                <br />
-                                                <label style={patient.attribute}>Histórico Familiar: </label>
-                                                {chronic.familyHistory.map((history, index) => (
-                                                    <div key={index}>
-                                                        <input
-                                                            type="text"
-                                                            value={history}
-                                                            style={patient.input}
-                                                            onChange={(e) => handleChange(e, 'chronic', 'familyHistory', index)}
-                                                        />
-                                                        <br />
-                                                    </div>
-                                                ))}
+                                {visibleSections.anamnese && (
+                                    <div style={{ padding: '10px' }}>
+                                        <p style={patient.anamneseItem}>
+                                            <label>DST's:</label>
+                                            <input type="radio" name="dst" value="nao" /> Não
+                                            <input type="radio" name="dst" value="sim" style={{ marginLeft: '10px' }} /> Sim
+                                            <input
+                                                type="text"
+                                                placeholder="Comentários..."
+                                                value={comments.dst}
+                                                onChange={(e) => handleCommentChange(e, 'dst')}
+                                                style={patient.comment}
+                                            />
+                                        </p>
 
-                                                <div style={{ display: 'flex' }}>
-                                                    <button style={diagnostico.button} onClick={addFamilyHistory}>Adicionar Histórico Familiar</button>
-                                                    <br />
-                                                    <button style={diagnostico.button} onClick={() => handleEditToggle('chronic')}>Salvar</button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div>
-                                                <span style={patient.attribute}>Doenças Crônicas: </span>
-                                                {chronic.chronicDiseases.map((disease, index) => (
-                                                    <span key={index} style={patient.value}>{disease}{index < chronic.chronicDiseases.length - 1 ? ', ' : ''}</span>
-                                                ))}
-                                                <br />
-                                                <span style={patient.attribute}>Histórico Familiar: </span>
-                                                {chronic.familyHistory.map((history, index) => (
-                                                    <span key={index} style={patient.value}>{history}{index < chronic.familyHistory.length - 1 ? ', ' : ''}</span>
-                                                ))}
-                                                <br />
-                                            </div>
-                                        )}
+                                        <p style={patient.anamneseItem}>
+                                            <label>Doenças Crónicas:</label>
+                                            <input type="radio" name="doencas" value="nao" /> Não
+                                            <input type="radio" name="doencas" value="sim" style={{ marginLeft: '10px' }} /> Sim
+                                            <input
+                                                type="text"
+                                                placeholder="Comentários..."
+                                                value={comments.doencas}
+                                                onChange={(e) => handleCommentChange(e, 'doencas')}
+                                                style={patient.comment}
+                                            />
+                                        </p>
+
+                                        <p style={patient.anamneseItem}>
+                                            <label>Alergias:</label>
+                                            <input type="radio" name="alergias" value="nao" /> Não
+                                            <input type="radio" name="alergias" value="sim" style={{ marginLeft: '10px' }} /> Sim
+                                            <input
+                                                type="text"
+                                                placeholder="Comentários..."
+                                                value={comments.alergias}
+                                                onChange={(e) => handleCommentChange(e, 'alergias')}
+                                                style={patient.comment}
+                                            />
+                                        </p>
+
+                                        <p style={patient.anamneseItem}>
+                                            <label>Cirurgias:</label>
+                                            <input type="radio" name="cirurgias" value="nao" /> Não
+                                            <input type="radio" name="cirurgias" value="sim" style={{ marginLeft: '10px' }} /> Sim
+                                            <input
+                                                type="text"
+                                                placeholder="Comentários..."
+                                                value={comments.cirurgias}
+                                                onChange={(e) => handleCommentChange(e, 'cirurgias')}
+                                                style={patient.comment}
+                                            />
+                                        </p>
+
+                                        <p style={patient.anamneseItem}>
+                                            <label>Internamentos:</label>
+                                            <input type="radio" name="internamentos" value="nao" /> Não
+                                            <input type="radio" name="internamentos" value="sim" style={{ marginLeft: '10px' }} /> Sim
+                                            <input
+                                                type="text"
+                                                placeholder="Comentários..."
+                                                value={comments.internamentos}
+                                                onChange={(e) => handleCommentChange(e, 'internamentos')}
+                                                style={patient.comment}
+                                            />
+                                        </p>
+
+                                        <p style={patient.anamneseItem}>
+                                            <label>Medicação Habitual:</label>
+                                            <input type="radio" name="medicacao" value="nao" /> Não
+                                            <input type="radio" name="medicacao" value="sim" style={{ marginLeft: '10px' }} /> Sim
+                                            <input
+                                                type="text"
+                                                placeholder="Comentários..."
+                                                value={comments.medicacao}
+                                                onChange={(e) => handleCommentChange(e, 'medicacao')}
+                                                style={patient.comment}
+                                            />
+                                        </p>
+
+                                        <p style={patient.anamneseItem}>
+                                            <label>Antecedentes Familiares:</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Comentários..."
+                                                value={comments.antecedentes}
+                                                onChange={(e) => handleCommentChange(e, 'antecedentes')}
+                                                style={patient.comment}
+                                            />
+                                        </p>
                                     </div>
                                 )}
+
                             </div>
                         </div>
                     </div>
@@ -738,7 +757,7 @@ export default function PatientAppointment({ paciente }) {
 
                             <div style={{ display: "flex", justifyContent: 'space-between', alignItems: "center" }}>
                                 <p style={{ margin: '0 10px 0 0', minWidth: '80px' }}>Sintomas</p>
-                                <div style={{ flex: 1, justifyContent:'flex-end'}}>
+                                <div style={{ flex: 1, justifyContent: 'flex-end' }}>
                                     <Select
                                         isMulti
                                         name="symptoms"
@@ -750,60 +769,12 @@ export default function PatientAppointment({ paciente }) {
                                 </div>
                             </div>
 
-
-
-                            {predictions && (
-                                <div>
-                                    <h2>Predições:</h2>
-                                    <ul>
-                                        {Object.keys(predictions).map((disease) => (
-                                            <li key={disease}>
-                                                {disease}: {predictions[disease] === 1 ? 'Positivo' : 'Negativo'}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-
-
                         </div>
-                    </div >
+                    </div>
                 );
             case "Procedimentos":
                 return (
-
-                    <div style={patient.containerP}>
-                        <div style={patient.containerOutline}>
-                            {Object.keys(categories).map(category => (
-                                <div key={category}>
-                                    <div style={patient.containerHeader}>
-                                        <div style={patient.headerContent}>
-                                            <span style={patient.headerText}>{category}</span>
-                                        </div>
-                                    </div>
-
-                                    <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(4, 1fr)',
-                                        gap: '10px',
-                                        margin: 10
-                                    }}>
-                                        {categories[category].map(test => (
-                                            <label key={test} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedTests[category]?.[test] || false}
-                                                    onChange={() => handleCheckboxChange(category, test)}
-                                                    style={{ accentColor: '#00a2c9' }}
-                                                />
-                                                {test}
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <Procedimentos onSelectedExamsChange={handleSelectedExamsChange} ></Procedimentos>
                 );
             case "Diagnóstico":
                 return (
@@ -825,23 +796,23 @@ export default function PatientAppointment({ paciente }) {
                             <div style={{ display: "flex" }}>
                                 <p>O diagnóstico sugerido é: </p>
                                 <div style={{ display: "flex", alignItems: "center" }}>
-                                    <div>
-                                        <button style={diagnostico.button}>
-                                            Paludismo
-                                            <X />
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button style={diagnostico.button}>
-                                            Febre Tifóide
-                                            <X />
-                                        </button>
-                                    </div>
+                                    {positivePredictions.length > 0 ? (
+                                        positivePredictions.map((disease) => (
+                                            <div key={disease}>
+                                                <button style={diagnostico.button}>
+                                                    {disease}
+                                                </button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p> Nenhum diagnóstico positivo encontrado.</p>
+                                    )}
                                 </div>
                             </div>
                             <div>
-                                <button style={diagnostico.acceptButton}>Aceitar</button>
-                                <button style={diagnostico.rejectButton}>Rejeitar</button>
+                                <button style={diagnostico.acceptButton} onClick={handleAccept}>Aceitar</button>
+                                <button style={diagnostico.modifyButton} onClick={handleModify}>Modificar</button>
+                                <button style={diagnostico.rejectButton} onClick={handleReject}>Rejeitar</button>
                             </div>
                         </div>
 
@@ -851,131 +822,83 @@ export default function PatientAppointment({ paciente }) {
                                 borderRadius: 10,
                             }}
                         >
-                            <p style={{ color: "#2DA9B5", fontWeight: "bold", fontSize: 16, height: "25vh" }}>Diagnóstico</p>
+                            <p style={{ paddingLeft: 10, color: "#2DA9B5", fontWeight: "bold", fontSize: 16}}>Diagnóstico</p>
+
+                            <div style={{ paddingLeft: 10 }}>
+                                {acceptedDiseases.length > 0 ? (
+                                    acceptedDiseases.map((disease) => (
+                                        <p key={disease}>{disease}</p>
+                                    ))
+                                ) : (
+                                    <p>Nenhum diagnóstico aceite.</p>
+                                )}
+                            </div>
                         </div>
+
+                        {showModal && (
+                            <div
+                                style={{
+                                    position: "fixed",
+                                    top: 0,
+                                    left: 0,
+                                    width: "100vw",
+                                    height: "100vh",
+                                    backgroundColor: "rgba(0, 0, 0, 0.6)",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    zIndex: 1000,
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        backgroundColor: "#fff",
+                                        padding: 20,
+                                        borderRadius: 10,
+                                        width: "50%",
+                                    }}
+                                >
+                                    <h3>Modificar Diagnóstico</h3>
+                                    <div style={{ marginBottom: 10 }}>
+                                        <input
+                                            type="text"
+                                            value={diseaseInput}
+                                            onChange={(e) => setDiseaseInput(e.target.value)}
+                                            placeholder="Digite o nome da doença"
+                                            style={{ width: "80%", marginRight: 10, padding: 5 }}
+                                        />
+                                        <button onClick={handleAddDisease} style={diagnostico.addButton}>
+                                            Adicionar
+                                        </button>
+                                    </div>
+                                    <ul>
+                                        {modifiedDiseases.map((disease) => (
+                                            <li key={disease} style={{ marginBottom: 5 }}>
+                                                {disease}
+                                                <button
+                                                    onClick={() => handleDelete(disease)}
+                                                    style={diagnostico.deleteButton}
+                                                >
+                                                    Apagar
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <button onClick={handleSave} style={diagnostico.saveButton}>
+                                        Salvar
+                                    </button>
+                                    <button onClick={() => setShowModal(false)} style={diagnostico.cancelButton}>
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                 );
             case "Receita":
                 return (
-                    <div
-                        style={{
-                            display: "flex",
-                            marginLeft: 20,
-                            marginTop: 15,
-                            justifyContent: "space-between",
-                            width: "95%",
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: "20%",
-                                display: "flex",
-                                flexDirection: "column",
-                            }}
-                        >
-                            <button
-                                style={{
-                                    background: "#2DA9B5",
-                                    border: "none",
-                                    padding: 15,
-                                    borderRadius: 10,
-                                    color: "white",
-                                    fontFamily: "Poppins",
-                                    fontWeight: 600,
-                                    marginBottom: 15,
-                                }}
-                            >
-                                Nova Receita
-                            </button>
-
-                            <button
-                                style={{
-                                    background: "white",
-                                    border: "1px solid #2DA9B5",
-                                    padding: 15,
-                                    borderRadius: 10,
-                                    color: "#2DA9B5",
-                                    fontFamily: "Poppins",
-                                    fontWeight: 600,
-                                }}
-                            >
-                                Histórico de Receitas
-                            </button>
-                        </div>
-                        <div
-                            style={{
-                                width: "75%",
-                                border: "0.5px solid rgba(80,80,80,0.2)",
-                                borderRadius: 15,
-                                height: "45vh",
-                                padding: 10,
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "space-evenly",
-                            }}
-                        >
-                            <p style={{
-                                color: "#2DA9B5", fontWeight: "bold", marginTop: 0, fontSize: 16
-                            }}>Pesquisa de Medicamentos</p>
-
-                            <div style={{ display: "flex", width: "100%", justifyContent: 'space-between' }}>
-                                <div style={{ width: "85%", alignContent: 'center', borderRadius: 5, border: "0.5px solid rgba(80,80,80,0.2)" }}>
-                                    <input type="text" placeholder='Digite o nome de um medicamento...' style={{ width: "95%", border: 'none', fontFamily: 'Poppins' }} />
-                                    <ListMagnifyingGlass />
-                                </div>
-                                <button style={{
-                                    borderRadius: 8,
-                                    background: "#2DA9B5",
-                                    color: "white",
-                                    padding: 3,
-                                    borderColor: "#2DA9B5",
-                                    paddingTop: 6,
-                                    paddingBottom: 6,
-                                    paddingRight: 15,
-                                    paddingLeft: 15,
-                                    border: "none",
-                                    fontWeight: "bold",
-                                    cursor: "pointer"
-                                }}>Pesquisar</button>
-                            </div>
-
-                            <table
-                                style={{
-                                    width: "95%",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    borderCollapse: "collapse",
-                                }}
-                            >
-                                <thead>
-                                    <tr style={pacientes.tableTitles}>
-                                        <th style={pacientes.tableTitle}>Data</th>
-                                        <th style={pacientes.tableTitle}>Medicamento</th>
-                                        <th style={pacientes.tableTitle}>Quantidade</th>
-                                        <th style={pacientes.tableTitle}>Intervalo</th>
-                                        <th style={pacientes.tableTitle}>Remover</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {medicamentos.map((medicamento, index) => (
-                                        <tr key={index}>
-                                            <td style={pacientes.tableContent}>{currentDate.getDay() + '/' + currentDate.getMonth() + '/' + currentDate.getYear()}</td>
-                                            <td style={pacientes.tableContent}>{medicamento.medicamento}</td>
-                                            <td style={pacientes.tableContent}>{medicamento.quantidade}</td>
-                                            <td style={pacientes.tableContent}>{medicamento.intervalo}h</td>
-                                            <td style={pacientes.tableContent}>
-                                                <X />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-
-
-                        </div>
-                    </div>
-
-
+                    <Receita></Receita>
                 );
             default:
                 return null;
