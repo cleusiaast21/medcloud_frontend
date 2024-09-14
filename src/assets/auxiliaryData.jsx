@@ -65,7 +65,7 @@ export const categories = {
     Bioquimicas: [
         'Glicemia em Jejum', 'Ureia', 'Colesterol Total', 'Amilase', 'F. Alcalina',
         'Ácido Úrico', 'Triglicerídeos', 'HDL Colesterol', 'Proteína C Reativa', 'CK-MB',
-        'Triglicerídeos', 'LDL Colesterol', 'GOT/AST', 'Bilirrubina Total', 'Bilirrubina Directa', 'GGT'
+         'LDL Colesterol', 'GOT/AST', 'Bilirrubina Total', 'Bilirrubina Directa', 'GGT'
     ],
     Urina: [
         'Urina 2 (sumária)', 'Teste de Gravidez'

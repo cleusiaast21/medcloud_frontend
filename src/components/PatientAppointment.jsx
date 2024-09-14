@@ -1,20 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import {
-    medicamentos
-} from "../assets/mocks.jsx";
-import {
-    X,
-    NotePencil,
-    CaretDown,
-    ListMagnifyingGlass,
+    X
 } from "@phosphor-icons/react";
 import Select from 'react-select';
 import { symptomOptions } from '../assets/auxiliaryData.jsx';
-import { categories } from '../assets/auxiliaryData.jsx';
 import axios from 'axios';
 import Receita from './Receita.js';
 import Procedimentos from './Procedimentos.js';
+import Informacoes from './Informacoes.js';
 
 export default function PatientAppointment({ paciente }) {
 
@@ -25,22 +19,21 @@ export default function PatientAppointment({ paciente }) {
     const [notasText, setNotasText] = useState("");
     const [selectedSymptoms, setSelectedSymptoms] = useState([]);
     const [predictions, setPredictions] = useState(null);
-    const [selectedProcedures, setSelectedProcedures] = useState({});
     const [positivePredictions, setPositivePredictions] = useState([]);
     const [selectedExams, setSelectedExams] = useState([]);
-    const [visibleSections, setVisibleSections] = useState({
-        vitals: true,
-        anamnese: true
-    });
-    const [comments, setComments] = useState({
-        dst: '',
-        doencas: '',
-        alergias: '',
-        cirurgias: '',
-        internamentos: '',
-        medicacao: '',
-        antecedentes: ''
-    });
+    
+    const informacoesRef = useRef(null);
+    const [collectedData, setCollectedData] = useState(null);
+
+    // Function to handle the click event
+    const handleCollectData = () => {
+        if (informacoesRef.current) {
+            // Call the child component's getData method
+            const data = informacoesRef.current();
+            setCollectedData(data);
+            console.log(collectedData)
+        }
+    };
 
     const [acceptedDiseases, setAcceptedDiseases] = useState([]);
     const [showModal, setShowModal] = useState(false);
@@ -90,48 +83,7 @@ export default function PatientAppointment({ paciente }) {
         }, {});
 
         setSelectedSymptoms(symptoms);
-    };
-
-    const handleExamSelection = (selectedExams) => {
-        setSelectedExams(selectedExams);
-    };
-    
-
-    const handleUpdateConsulta = async (consultaId) => {
-        const consultaData = {
-            subjectiveText,
-            objectivoText,
-            notasText,
-            selectedSymptoms,
-            selectedProcedures,
-            positivePredictions,
-            acceptedDiseases,
-            comments,
-            selectedExams // Include this line
-        };
-    
-        try {
-            const response = await fetch(`/consulta/${consultaId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(consultaData),
-            });
-    
-            if (response.ok) {
-                const updatedConsulta = await response.json();
-                console.log('Consulta updated:', updatedConsulta);
-                // Handle success, e.g., show a success message or redirect
-            } else {
-                console.error('Failed to update consulta');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    };
-    
-    
+    };    
 
     const handleSubmit = async () => {
         try {
@@ -147,18 +99,6 @@ export default function PatientAppointment({ paciente }) {
             console.error('Error fetching predictions:', error);
         }
     };
-    const handleCommentChange = (event, field) => {
-        const value = event.target.value;
-        setComments(prevState => ({
-            ...prevState,
-            [field]: value
-        }));
-    };
-
-    const handleVisibilityToggle = (section) => {
-        setVisibleSections((prev) => ({ ...prev, [section]: !prev[section] }));
-    };
-
 
     const handleSubjectiveChange = (event) => {
         setSubjectiveText(event.target.value);
@@ -171,34 +111,6 @@ export default function PatientAppointment({ paciente }) {
         setNotasText(e.target.value);
     };
 
-    const [editMode, setEditMode] = useState({
-        vitals: false,
-        allergies: false,
-        chronic: false
-    });
-
-    const [vitals, setVitals] = useState({
-        heartRate: '',
-        respiratoryRate: '',
-        bloodPressure: '',
-        temperature: '',
-        weight: ''
-    });
-
-
-    const handleEditToggle = (section) => {
-        setEditMode((prev) => ({ ...prev, [section]: !prev[section] }));
-    };
-
-    const handleChange = (e, section, key, index) => {
-        const { value } = e.target;
-        if (section === 'vitals') {
-            setVitals((prev) => ({ ...prev, [key]: value }));
-        } else if (section === 'anamese') {
-
-        }
-    };
-
     const handleTabClick = (tab) => {
         setSelectedTab(tab);
     };
@@ -208,12 +120,13 @@ export default function PatientAppointment({ paciente }) {
 
         if (selectedTab === "Consulta")
             handleSubmit();
+ 
+        if (selectedTab === "Informações")
+            handleCollectData();
 
         const currentIndex = tabs.indexOf(selectedTab);
         const nextIndex = (currentIndex + 1) % tabs.length;
         setSelectedTab(tabs[nextIndex]);
-
-
     };
 
     const handlePreviousClick = () => {
@@ -447,204 +360,13 @@ export default function PatientAppointment({ paciente }) {
         }),
     };
 
+    
+
     const renderTabContent = () => {
         switch (selectedTab) {
             case "Informações":
                 return (
-                    <div>
-                        <div style={patient.containerP}>
-                            <div style={patient.containerOutline}>
-                                <div style={patient.containerHeader}>
-                                    <div style={patient.headerContent}>
-                                        <span style={patient.headerText}>Sinais Vitais</span>
-                                        <div>
-                                            <NotePencil size={25} color="#2DA9B5" onClick={() => handleEditToggle('vitals')} style={{ cursor: 'pointer' }} />
-                                            <CaretDown size={25} color="#2DA9B5" onClick={() => handleVisibilityToggle('vitals')} style={{ cursor: 'pointer' }} />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {visibleSections.vitals && (
-
-                                    <div style={{ padding: 5 }}>
-                                        {editMode.vitals ? (
-                                            <div>
-                                                <label style={patient.attribute}>Frequência Cardíaca: </label>
-                                                <input
-                                                    type="text"
-                                                    value={vitals.heartRate}
-                                                    style={patient.input}
-                                                    onChange={(e) => handleChange(e, 'vitals', 'heartRate')}
-                                                />
-                                                <br />
-                                                <label style={patient.attribute}>Frequência Respiratória: </label>
-                                                <input
-                                                    type="text"
-                                                    style={patient.input}
-                                                    value={vitals.respiratoryRate}
-                                                    onChange={(e) => handleChange(e, 'vitals', 'respiratoryRate')}
-                                                />
-                                                <br />
-                                                <label style={patient.attribute}>Pressão Arterial: </label>
-                                                <input
-                                                    type="text"
-                                                    style={patient.input}
-                                                    value={vitals.bloodPressure}
-                                                    onChange={(e) => handleChange(e, 'vitals', 'bloodPressure')}
-                                                />
-                                                <br />
-                                                <label style={patient.attribute}>Temperatura: </label>
-                                                <input
-                                                    type="text"
-                                                    value={vitals.temperature}
-                                                    style={patient.input}
-                                                    onChange={(e) => handleChange(e, 'vitals', 'temperature')}
-                                                />
-                                                <br />
-                                                <label style={patient.attribute}>Peso: </label>
-                                                <input
-                                                    type="text"
-                                                    value={vitals.weight}
-                                                    style={patient.input}
-                                                    onChange={(e) => handleChange(e, 'vitals', 'weight')}
-                                                />
-                                                <br />
-                                                <button style={diagnostico.button} onClick={() => handleEditToggle('vitals')}>Salvar</button>
-                                            </div>
-                                        ) : (
-                                            <div>
-                                                <span style={patient.attribute}>Frequência Cardíaca: </span>
-                                                <span style={patient.value}>{vitals.heartRate} bpm</span>
-                                                <br />
-                                                <span style={patient.attribute}>Frequência Respiratória: </span>
-                                                <span style={patient.value}>{vitals.respiratoryRate} mrm</span>
-                                                <br />
-                                                <span style={patient.attribute}>Pressão Arterial: </span>
-                                                <span style={patient.value}>{vitals.bloodPressure} mmHg</span>
-                                                <br />
-                                                <span style={patient.attribute}>Temperatura: </span>
-                                                <span style={patient.value}>{vitals.temperature} ºC</span>
-                                                <br />
-                                                <span style={patient.attribute}>Peso: </span>
-                                                <span style={patient.value}>{vitals.weight} kg</span>
-                                                <br />
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div style={patient.containerP}>
-                            <div style={patient.containerOutline}>
-                                <div style={patient.containerHeader}>
-                                    <div style={patient.headerContent}>
-                                        <span style={patient.headerText}>
-                                            Anamnese
-                                        </span>
-                                        <div>
-                                            <NotePencil size={25} color="#2DA9B5" onClick={() => handleEditToggle('anamnese')} style={{ cursor: 'pointer' }} />
-                                            <CaretDown size={25} color="#2DA9B5" onClick={() => handleVisibilityToggle('anamnese')} style={{ cursor: 'pointer' }} />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {visibleSections.anamnese && (
-                                    <div style={{ padding: '10px' }}>
-                                        <p style={patient.anamneseItem}>
-                                            <label>DST's:</label>
-                                            <input type="radio" name="dst" value="nao" /> Não
-                                            <input type="radio" name="dst" value="sim" style={{ marginLeft: '10px' }} /> Sim
-                                            <input
-                                                type="text"
-                                                placeholder="Comentários..."
-                                                value={comments.dst}
-                                                onChange={(e) => handleCommentChange(e, 'dst')}
-                                                style={patient.comment}
-                                            />
-                                        </p>
-
-                                        <p style={patient.anamneseItem}>
-                                            <label>Doenças Crónicas:</label>
-                                            <input type="radio" name="doencas" value="nao" /> Não
-                                            <input type="radio" name="doencas" value="sim" style={{ marginLeft: '10px' }} /> Sim
-                                            <input
-                                                type="text"
-                                                placeholder="Comentários..."
-                                                value={comments.doencas}
-                                                onChange={(e) => handleCommentChange(e, 'doencas')}
-                                                style={patient.comment}
-                                            />
-                                        </p>
-
-                                        <p style={patient.anamneseItem}>
-                                            <label>Alergias:</label>
-                                            <input type="radio" name="alergias" value="nao" /> Não
-                                            <input type="radio" name="alergias" value="sim" style={{ marginLeft: '10px' }} /> Sim
-                                            <input
-                                                type="text"
-                                                placeholder="Comentários..."
-                                                value={comments.alergias}
-                                                onChange={(e) => handleCommentChange(e, 'alergias')}
-                                                style={patient.comment}
-                                            />
-                                        </p>
-
-                                        <p style={patient.anamneseItem}>
-                                            <label>Cirurgias:</label>
-                                            <input type="radio" name="cirurgias" value="nao" /> Não
-                                            <input type="radio" name="cirurgias" value="sim" style={{ marginLeft: '10px' }} /> Sim
-                                            <input
-                                                type="text"
-                                                placeholder="Comentários..."
-                                                value={comments.cirurgias}
-                                                onChange={(e) => handleCommentChange(e, 'cirurgias')}
-                                                style={patient.comment}
-                                            />
-                                        </p>
-
-                                        <p style={patient.anamneseItem}>
-                                            <label>Internamentos:</label>
-                                            <input type="radio" name="internamentos" value="nao" /> Não
-                                            <input type="radio" name="internamentos" value="sim" style={{ marginLeft: '10px' }} /> Sim
-                                            <input
-                                                type="text"
-                                                placeholder="Comentários..."
-                                                value={comments.internamentos}
-                                                onChange={(e) => handleCommentChange(e, 'internamentos')}
-                                                style={patient.comment}
-                                            />
-                                        </p>
-
-                                        <p style={patient.anamneseItem}>
-                                            <label>Medicação Habitual:</label>
-                                            <input type="radio" name="medicacao" value="nao" /> Não
-                                            <input type="radio" name="medicacao" value="sim" style={{ marginLeft: '10px' }} /> Sim
-                                            <input
-                                                type="text"
-                                                placeholder="Comentários..."
-                                                value={comments.medicacao}
-                                                onChange={(e) => handleCommentChange(e, 'medicacao')}
-                                                style={patient.comment}
-                                            />
-                                        </p>
-
-                                        <p style={patient.anamneseItem}>
-                                            <label>Antecedentes Familiares:</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Comentários..."
-                                                value={comments.antecedentes}
-                                                onChange={(e) => handleCommentChange(e, 'antecedentes')}
-                                                style={patient.comment}
-                                            />
-                                        </p>
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-                    </div>
+                    <Informacoes getDataRef={informacoesRef}></Informacoes>
                 );
             case "Consulta":
 

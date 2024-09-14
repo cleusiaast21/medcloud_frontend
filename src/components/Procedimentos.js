@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
-import { useNavigate } from 'react-router-dom';
-import {
-    ListMagnifyingGlass,
-    X
-} from "@phosphor-icons/react";
-import {
-    medicamentos
-} from "../assets/mocks.jsx";
 import { categories } from '../assets/auxiliaryData.jsx';
 
 
