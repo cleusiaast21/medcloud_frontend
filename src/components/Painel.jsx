@@ -33,12 +33,10 @@ export default function Painel() {
                 const patientResponses = await Promise.all(patientRequests);
                 const patientData = patientResponses.reduce((acc, curr) => {
                     const paciente = curr.data;
-                    console.log(`Fetched Patient:`, paciente); // Debugging line
                     acc[paciente.numeroIdentificacao] = paciente; // Use numeroIdentificacao as the key
                     return acc;
                 }, {});
     
-                console.log('Final Patient Data:', patientData); // Log the full patient data object
                 setPatients(patientData);
             } catch (error) {
                 console.error('Error fetching waiting list or patient details:', error);

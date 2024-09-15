@@ -9,29 +9,56 @@ import axios from 'axios';
 import Receita from './Receita.js';
 import Procedimentos from './Procedimentos.js';
 import Informacoes from './Informacoes.js';
+import Consulta from './Consulta.js';
 
 export default function PatientAppointment({ paciente }) {
 
     const currentDate = new Date();
     const [selectedTab, setSelectedTab] = useState("Informações");
-    const [subjectiveText, setSubjectiveText] = useState('');
-    const [objectivoText, setObjectivoText] = useState("");
-    const [notasText, setNotasText] = useState("");
     const [selectedSymptoms, setSelectedSymptoms] = useState([]);
     const [predictions, setPredictions] = useState(null);
     const [positivePredictions, setPositivePredictions] = useState([]);
     const [selectedExams, setSelectedExams] = useState([]);
-    
+
     const informacoesRef = useRef(null);
     const [collectedData, setCollectedData] = useState(null);
 
-    // Function to handle the click event
+
+    const [consultaData, setConsultaData] = useState({
+        subjectiveText: '',
+        objectivoText: '',
+        notasText: '',
+        selectedSymptoms: []
+    });
+
+    // Handlers to update state from child
+    const handleSubjectiveChange = (value) => {
+        setConsultaData(prevData => ({ ...prevData, subjectiveText: value }));
+    };
+
+    const handleObjectivoChange = (value) => {
+        setConsultaData(prevData => ({ ...prevData, objectivoText: value }));
+    };
+
+    const handleNotasChange = (value) => {
+        setConsultaData(prevData => ({ ...prevData, notasText: value }));
+    };
+
+    const handleSymptomsChange = (symptoms) => {
+        setConsultaData(prevData => ({ ...prevData, selectedSymptoms: symptoms }));
+    };
+
+    // This function will be called when the button is clicked
+    const handleButtonClick = () => {
+        console.log('Data to submit:', consultaData);
+        // Perform actions with the data here, e.g., send to the server
+    };
+
     const handleCollectData = () => {
         if (informacoesRef.current) {
-            // Call the child component's getData method
             const data = informacoesRef.current();
             setCollectedData(data);
-            console.log(collectedData)
+            console.log("The collected data is ",collectedData)
         }
     };
 
@@ -46,7 +73,6 @@ export default function PatientAppointment({ paciente }) {
 
     const handleSelectedExamsChange = (exams) => {
         setSelectedExams(exams);
-        console.log('Selected Exams:', selectedExams);
     };
 
     const handleReject = () => {
@@ -75,19 +101,10 @@ export default function PatientAppointment({ paciente }) {
         }
     };
 
-    const handleSelectChange = (selectedOptions) => {
-        // Convert selected options to an array of symptom names
-        const symptoms = selectedOptions.reduce((acc, option) => {
-            acc[option.value] = 1;
-            return acc;
-        }, {});
-
-        setSelectedSymptoms(symptoms);
-    };    
 
     const handleSubmit = async () => {
         try {
-            const response = await axios.post('http://localhost:5001/predict', { symptoms: selectedSymptoms });
+            const response = await axios.post('http://localhost:5001/predict', { symptoms: consultaData.selectedSymptoms });
             const data = response.data;
             setPredictions(data);
 
@@ -100,16 +117,6 @@ export default function PatientAppointment({ paciente }) {
         }
     };
 
-    const handleSubjectiveChange = (event) => {
-        setSubjectiveText(event.target.value);
-    };
-    const handleObjectivoChange = (e) => {
-        setObjectivoText(e.target.value);
-    };
-
-    const handleNotasChange = (e) => {
-        setNotasText(e.target.value);
-    };
 
     const handleTabClick = (tab) => {
         setSelectedTab(tab);
@@ -118,11 +125,13 @@ export default function PatientAppointment({ paciente }) {
     const handleNextClick = () => {
         const tabs = ["Informações", "Consulta", "Procedimentos", "Diagnóstico", "Receita"];
 
-        if (selectedTab === "Consulta")
-            handleSubmit();
- 
         if (selectedTab === "Informações")
             handleCollectData();
+
+        if (selectedTab === "Consulta") {
+            handleButtonClick();
+            handleSubmit();
+        }
 
         const currentIndex = tabs.indexOf(selectedTab);
         const nextIndex = (currentIndex + 1) % tabs.length;
@@ -320,47 +329,9 @@ export default function PatientAppointment({ paciente }) {
         },
     };
 
-    const customStyles = {
-        control: (provided, state) => ({
-            ...provided,
-            border: state.isFocused ? '2px solid #2DA9B5' : '0.5px solid rgba(80,80,80,0.2)', // Border color when focused
-            boxShadow: state.isFocused ? '0 0 5px rgba(0, 123, 255, 0.2)' : 'none', // Shadow effect on focus
-            '&:hover': {
-                borderColor: '#2DA9B5', // Border color on hover
-            },
-            borderRadius: 5,
-            fontSize: 13,
-            width: '99%',
-            marginLeft: 11
-        }),
-        option: (provided, state) => ({
-            ...provided,
-            backgroundColor: state.isSelected ? '#2DA9B5' : state.isFocused ? '#e6f7ff' : 'white', // Background color for selected and focused options
-            color: state.isSelected ? 'white' : '#333', // Text color for selected option
-            padding: 2,
-        }),
-        multiValue: (provided) => ({
-            ...provided,
-            backgroundColor: '#2DA9B5', // Background color for selected options
-            color: 'white',
-            borderRadius: '5px',
-            padding: '3px 5px',
-        }),
-        multiValueLabel: (provided) => ({
-            ...provided,
-            color: 'white', // Text color for selected options
-        }),
-        multiValueRemove: (provided) => ({
-            ...provided,
-            color: 'white', // Text color for remove icon
-            '&:hover': {
-                backgroundColor: '#cc4c4c',
-                color: 'white',
-            },
-        }),
-    };
 
-    
+
+
 
     const renderTabContent = () => {
         switch (selectedTab) {
@@ -371,128 +342,14 @@ export default function PatientAppointment({ paciente }) {
             case "Consulta":
 
                 return (
-                    <div
-                        style={{
-                            display: "flex",
-                            marginLeft: 20,
-                            marginTop: 15,
-                            justifyContent: "space-between",
-                            width: "95%",
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: "20%",
-                                display: "flex",
-                                flexDirection: "column",
-                            }}
-                        >
-                            <button
-                                style={{
-                                    background: "#2DA9B5",
-                                    border: "none",
-                                    padding: 15,
-                                    borderRadius: 10,
-                                    color: "white",
-                                    fontFamily: "Poppins",
-                                    fontWeight: 600,
-                                    marginBottom: 15,
-                                }}
-                            >
-                                Nova Consulta
-                            </button>
-
-                            <button
-                                style={{
-                                    background: "white",
-                                    border: "1px solid #2DA9B5",
-                                    padding: 15,
-                                    borderRadius: 10,
-                                    color: "#2DA9B5",
-                                    fontFamily: "Poppins",
-                                    fontWeight: 600,
-                                }}
-                            >
-                                Histórico de consultas
-                            </button>
-                        </div>
-                        <div
-                            style={{
-                                width: "75%",
-                                border: "0.5px solid rgba(80,80,80,0.2)",
-                                borderRadius: 15,
-                                height: "45vh",
-                                padding: 10,
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "space-evenly",
-                            }}
-                        >
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <p>Subjectivo</p>
-                                <textarea
-                                    name="subjective"
-                                    id="subjective"
-                                    style={{
-                                        resize: "none",
-                                        width: "85%",
-                                        border: "0.5px solid rgba(80,80,80,0.2)",
-                                        borderRadius: 5,
-                                    }}
-                                    value={subjectiveText}
-                                    onChange={handleSubjectiveChange}
-                                ></textarea>
-                            </div>
-
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <p>Notas</p>
-                                <textarea
-                                    name=""
-                                    id=""
-                                    style={{
-                                        resize: "none",
-                                        width: "85%",
-                                        border: "0.5px solid rgba(80,80,80,0.2)",
-                                        borderRadius: 5,
-                                    }}
-                                    value={notasText}
-                                    onChange={handleNotasChange}
-                                ></textarea>
-                            </div>
-
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <p>Objectivo</p>
-                                <textarea
-                                    name=""
-                                    id=""
-                                    style={{
-                                        resize: "none",
-                                        width: "85%",
-                                        border: "0.5px solid rgba(80,80,80,0.2)",
-                                        borderRadius: 5,
-                                    }}
-                                    value={objectivoText}
-                                    onChange={handleObjectivoChange}
-                                ></textarea>
-                            </div>
-
-
-                            <div style={{ display: "flex", justifyContent: 'space-between', alignItems: "center" }}>
-                                <p style={{ margin: '0 10px 0 0', minWidth: '80px' }}>Sintomas</p>
-                                <div style={{ flex: 1, justifyContent: 'flex-end' }}>
-                                    <Select
-                                        isMulti
-                                        name="symptoms"
-                                        options={symptomOptions}
-                                        onChange={handleSelectChange}
-                                        placeholder="Selecione os sintomas..."
-                                        styles={customStyles}
-                                    />
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
+                    <Consulta subjectiveText={consultaData.subjectiveText}
+                        objectivoText={consultaData.objectivoText}
+                        notasText={consultaData.notasText}
+                        selectedSymptoms={consultaData.selectedSymptoms}
+                        onSubjectiveChange={handleSubjectiveChange}
+                        onObjectivoChange={handleObjectivoChange}
+                        onNotasChange={handleNotasChange}
+                        onSymptomsChange={handleSymptomsChange}></Consulta>
                 );
             case "Procedimentos":
                 return (
@@ -544,7 +401,7 @@ export default function PatientAppointment({ paciente }) {
                                 borderRadius: 10,
                             }}
                         >
-                            <p style={{ paddingLeft: 10, color: "#2DA9B5", fontWeight: "bold", fontSize: 16}}>Diagnóstico</p>
+                            <p style={{ paddingLeft: 10, color: "#2DA9B5", fontWeight: "bold", fontSize: 16 }}>Diagnóstico</p>
 
                             <div style={{ paddingLeft: 10 }}>
                                 {acceptedDiseases.length > 0 ? (
