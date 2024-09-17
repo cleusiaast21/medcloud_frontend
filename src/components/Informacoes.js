@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import {
     CaretDown,
     NotePencil
 } from "@phosphor-icons/react";
 
-
-export default function Informacoes({getDataRef }) {
+const Informacoes = forwardRef((props, ref) => {
+    const { vitals, setVitals, comments, setComments } = props;
 
     const [editMode, setEditMode] = useState({
         vitals: false,
@@ -14,28 +14,20 @@ export default function Informacoes({getDataRef }) {
         chronic: false
     });
 
-    const [vitals, setVitals] = useState({
-        heartRate: '',
-        respiratoryRate: '',
-        bloodPressure: '',
-        temperature: '',
-        weight: ''
-    });
-
     const [visibleSections, setVisibleSections] = useState({
         vitals: true,
         anamnese: true
     });
 
-    const [comments, setComments] = useState({
-        dst: '',
-        doencas: '',
-        alergias: '',
-        cirurgias: '',
-        internamentos: '',
-        medicacao: '',
-        antecedentes: ''
-    });
+    // Expose handleFetchData to the parent component via ref
+    useImperativeHandle(ref, () => ({
+        handleFetchData() {
+            return {
+                vitals,
+                comments
+            };
+        }
+    }));
 
     const handleEditToggle = (section) => {
         setEditMode((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -59,19 +51,6 @@ export default function Informacoes({getDataRef }) {
     const handleVisibilityToggle = (section) => {
         setVisibleSections((prev) => ({ ...prev, [section]: !prev[section] }));
     };
-
-    // This function will be called by the parent component to get the current state
-    const getData = () => {
-        return {
-            vitals,
-            comments
-        };
-    };
-
-    // Store the getData function reference in the ref provided by the parent
-    if (getDataRef) {
-        getDataRef.current = getData;
-    }
 
     const patient = {
         attribute: {
@@ -153,7 +132,6 @@ export default function Informacoes({getDataRef }) {
     };
 
     return (
-
         <div>
             <div style={patient.containerP}>
                 <div style={patient.containerOutline}>
@@ -168,7 +146,6 @@ export default function Informacoes({getDataRef }) {
                     </div>
 
                     {visibleSections.vitals && (
-
                         <div style={{ padding: 5 }}>
                             {editMode.vitals ? (
                                 <div>
@@ -212,7 +189,6 @@ export default function Informacoes({getDataRef }) {
                                         onChange={(e) => handleChange(e, 'vitals', 'weight')}
                                     />
                                     <br />
-                                    <button style={diagnostico.button} onClick={() => handleEditToggle('vitals')}>Salvar</button>
                                 </div>
                             ) : (
                                 <div>
@@ -242,9 +218,7 @@ export default function Informacoes({getDataRef }) {
                 <div style={patient.containerOutline}>
                     <div style={patient.containerHeader}>
                         <div style={patient.headerContent}>
-                            <span style={patient.headerText}>
-                                Anamnese
-                            </span>
+                            <span style={patient.headerText}>Anamnese</span>
                             <div>
                                 <NotePencil size={25} color="#2DA9B5" onClick={() => handleEditToggle('anamnese')} style={{ cursor: 'pointer' }} />
                                 <CaretDown size={25} color="#2DA9B5" onClick={() => handleVisibilityToggle('anamnese')} style={{ cursor: 'pointer' }} />
@@ -256,8 +230,6 @@ export default function Informacoes({getDataRef }) {
                         <div style={{ padding: '10px' }}>
                             <p style={patient.anamneseItem}>
                                 <label>DST's:</label>
-                                <input type="radio" name="dst" value="nao" /> Não
-                                <input type="radio" name="dst" value="sim" style={{ marginLeft: '10px' }} /> Sim
                                 <input
                                     type="text"
                                     placeholder="Comentários..."
@@ -269,8 +241,6 @@ export default function Informacoes({getDataRef }) {
 
                             <p style={patient.anamneseItem}>
                                 <label>Doenças Crónicas:</label>
-                                <input type="radio" name="doencas" value="nao" /> Não
-                                <input type="radio" name="doencas" value="sim" style={{ marginLeft: '10px' }} /> Sim
                                 <input
                                     type="text"
                                     placeholder="Comentários..."
@@ -282,8 +252,6 @@ export default function Informacoes({getDataRef }) {
 
                             <p style={patient.anamneseItem}>
                                 <label>Alergias:</label>
-                                <input type="radio" name="alergias" value="nao" /> Não
-                                <input type="radio" name="alergias" value="sim" style={{ marginLeft: '10px' }} /> Sim
                                 <input
                                     type="text"
                                     placeholder="Comentários..."
@@ -295,8 +263,6 @@ export default function Informacoes({getDataRef }) {
 
                             <p style={patient.anamneseItem}>
                                 <label>Cirurgias:</label>
-                                <input type="radio" name="cirurgias" value="nao" /> Não
-                                <input type="radio" name="cirurgias" value="sim" style={{ marginLeft: '10px' }} /> Sim
                                 <input
                                     type="text"
                                     placeholder="Comentários..."
@@ -308,8 +274,6 @@ export default function Informacoes({getDataRef }) {
 
                             <p style={patient.anamneseItem}>
                                 <label>Internamentos:</label>
-                                <input type="radio" name="internamentos" value="nao" /> Não
-                                <input type="radio" name="internamentos" value="sim" style={{ marginLeft: '10px' }} /> Sim
                                 <input
                                     type="text"
                                     placeholder="Comentários..."
@@ -320,9 +284,7 @@ export default function Informacoes({getDataRef }) {
                             </p>
 
                             <p style={patient.anamneseItem}>
-                                <label>Medicação Habitual:</label>
-                                <input type="radio" name="medicacao" value="nao" /> Não
-                                <input type="radio" name="medicacao" value="sim" style={{ marginLeft: '10px' }} /> Sim
+                                <label>Medicação:</label>
                                 <input
                                     type="text"
                                     placeholder="Comentários..."
@@ -333,7 +295,7 @@ export default function Informacoes({getDataRef }) {
                             </p>
 
                             <p style={patient.anamneseItem}>
-                                <label>Antecedentes Familiares:</label>
+                                <label>Antecedentes:</label>
                                 <input
                                     type="text"
                                     placeholder="Comentários..."
@@ -344,12 +306,10 @@ export default function Informacoes({getDataRef }) {
                             </p>
                         </div>
                     )}
-
                 </div>
             </div>
         </div>
-
-
-
     );
-}
+});
+
+export default Informacoes;

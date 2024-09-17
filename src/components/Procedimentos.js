@@ -1,28 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import { categories } from '../assets/auxiliaryData.jsx';
 
-
-export default function Procedimentos({ onSelectedExamsChange }) {
-
-    const [selectedTests, setSelectedTests] = useState({});
-
-    // Call the parent's callback function whenever selectedTests change
-    useEffect(() => {
-        if (onSelectedExamsChange) {
-            onSelectedExamsChange(selectedTests);
-        }
-    }, [selectedTests, onSelectedExamsChange]);
-
+export default function Procedimentos({ selectedExams, onSelectedExamsChange }) {
+    // Update the selected tests state in the parent component
     const handleCheckboxChange = (category, test) => {
-        setSelectedTests(prevState => ({
-            ...prevState,
+        const updatedExams = {
+            ...selectedExams,
             [category]: {
-                ...prevState[category],
-                [test]: !prevState[category]?.[test],
+                ...selectedExams[category],
+                [test]: !selectedExams[category]?.[test],
             }
-        }));
+        };
+
+        // Call the parent's callback to update its state
+        if (onSelectedExamsChange) {
+            onSelectedExamsChange(updatedExams);
+        }
     };
+
     const patient = {
         attribute: {
             color: "#808080",
@@ -51,7 +47,7 @@ export default function Procedimentos({ onSelectedExamsChange }) {
             width: "96.5%",
             justifyContent: "flex-end",
             justifySelf: "center",
-            marginBottom: 10
+            marginBottom: 10,
         },
         containerOutline: {
             border: "0.5px solid rgba(128,128,128,0.5)",
@@ -74,21 +70,21 @@ export default function Procedimentos({ onSelectedExamsChange }) {
         input: {
             border: "1.5px solid rgba(128,128,128,0.2)",
             borderRadius: 5,
-            fontFamily: 'Poppins'
+            fontFamily: 'Poppins',
         },
         comment: {
             marginLeft: '10px',
             border: "0.5px solid #cfcfcf",
             borderRadius: 5,
             width: '68%',
-            padding: 3
+            padding: 3,
         },
         anamneseItem: {
             width: '100%',
-        }
+        },
     };
-    return (
 
+    return (
         <div style={patient.containerP}>
             <div style={patient.containerOutline}>
                 {Object.keys(categories).map(category => (
@@ -103,13 +99,13 @@ export default function Procedimentos({ onSelectedExamsChange }) {
                             display: 'grid',
                             gridTemplateColumns: 'repeat(4, 1fr)',
                             gap: '10px',
-                            margin: 10
+                            margin: 10,
                         }}>
                             {categories[category].map(test => (
                                 <label key={test} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                     <input
                                         type="checkbox"
-                                        checked={selectedTests[category]?.[test] || false}
+                                        checked={selectedExams[category]?.[test] || false} // Use selectedExams prop
                                         onChange={() => handleCheckboxChange(category, test)}
                                         style={{ accentColor: '#00a2c9' }}
                                     />
@@ -121,6 +117,5 @@ export default function Procedimentos({ onSelectedExamsChange }) {
                 ))}
             </div>
         </div>
-
     );
 }

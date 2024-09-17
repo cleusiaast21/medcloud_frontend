@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import {
     X
 } from "@phosphor-icons/react";
-import Select from 'react-select';
-import { symptomOptions } from '../assets/auxiliaryData.jsx';
 import axios from 'axios';
 import Receita from './Receita.js';
 import Procedimentos from './Procedimentos.js';
@@ -13,16 +11,17 @@ import Consulta from './Consulta.js';
 
 export default function PatientAppointment({ paciente }) {
 
+
+    //vitals, comments, consultaData, selectedExams, acceptedDiseases
+
     const currentDate = new Date();
     const [selectedTab, setSelectedTab] = useState("Informações");
-    const [selectedSymptoms, setSelectedSymptoms] = useState([]);
     const [predictions, setPredictions] = useState(null);
     const [positivePredictions, setPositivePredictions] = useState([]);
-    const [selectedExams, setSelectedExams] = useState([]);
-
-    const informacoesRef = useRef(null);
-    const [collectedData, setCollectedData] = useState(null);
-
+    const [acceptedDiseases, setAcceptedDiseases] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [diseaseInput, setDiseaseInput] = useState("");
+    const [modifiedDiseases, setModifiedDiseases] = useState([]);
 
     const [consultaData, setConsultaData] = useState({
         subjectiveText: '',
@@ -30,6 +29,44 @@ export default function PatientAppointment({ paciente }) {
         notasText: '',
         selectedSymptoms: []
     });
+
+    const informacoesRef = useRef();
+
+    // Move the state to the parent component
+    const [vitals, setVitals] = useState({
+        heartRate: '',
+        respiratoryRate: '',
+        bloodPressure: '',
+        temperature: '',
+        weight: ''
+    });
+
+    const [comments, setComments] = useState({
+        dst: '',
+        doencas: '',
+        alergias: '',
+        cirurgias: '',
+        internamentos: '',
+        medicacao: '',
+        antecedentes: ''
+    });
+
+    const handleSaveInformacoes = () => {
+        if (informacoesRef.current) {
+            const data = informacoesRef.current.handleFetchData();
+            console.log("Data to be saved:", data);
+            // Update the parent state with the data from Informacoes
+            setVitals(data.vitals);
+            setComments(data.comments);
+        }
+    };
+
+    const [selectedExams, setSelectedExams] = useState({});
+
+    // Function to update the selected exams state
+    const handleSelectedExamsChange = (updatedExams) => {
+        setSelectedExams(updatedExams);
+    };
 
     // Handlers to update state from child
     const handleSubjectiveChange = (value) => {
@@ -54,25 +91,8 @@ export default function PatientAppointment({ paciente }) {
         // Perform actions with the data here, e.g., send to the server
     };
 
-    const handleCollectData = () => {
-        if (informacoesRef.current) {
-            const data = informacoesRef.current();
-            setCollectedData(data);
-            console.log("The collected data is ",collectedData)
-        }
-    };
-
-    const [acceptedDiseases, setAcceptedDiseases] = useState([]);
-    const [showModal, setShowModal] = useState(false);
-    const [diseaseInput, setDiseaseInput] = useState("");
-    const [modifiedDiseases, setModifiedDiseases] = useState([]);
-
     const handleAccept = () => {
         setAcceptedDiseases(positivePredictions);
-    };
-
-    const handleSelectedExamsChange = (exams) => {
-        setSelectedExams(exams);
     };
 
     const handleReject = () => {
@@ -125,12 +145,17 @@ export default function PatientAppointment({ paciente }) {
     const handleNextClick = () => {
         const tabs = ["Informações", "Consulta", "Procedimentos", "Diagnóstico", "Receita"];
 
-        if (selectedTab === "Informações")
-            handleCollectData();
-
         if (selectedTab === "Consulta") {
             handleButtonClick();
             handleSubmit();
+        }
+
+        if (selectedTab === "Informações") {
+            handleSaveInformacoes();
+        }
+
+        if (selectedTab === "Procedimentos") {
+            console.log('Selected Exams:', selectedExams)
         }
 
         const currentIndex = tabs.indexOf(selectedTab);
@@ -330,14 +355,16 @@ export default function PatientAppointment({ paciente }) {
     };
 
 
-
-
-
     const renderTabContent = () => {
         switch (selectedTab) {
             case "Informações":
                 return (
-                    <Informacoes getDataRef={informacoesRef}></Informacoes>
+                    <Informacoes ref={informacoesRef}
+                        vitals={vitals}
+                        setVitals={setVitals}
+                        comments={comments}
+                        setComments={setComments}
+                    />
                 );
             case "Consulta":
 
@@ -349,11 +376,14 @@ export default function PatientAppointment({ paciente }) {
                         onSubjectiveChange={handleSubjectiveChange}
                         onObjectivoChange={handleObjectivoChange}
                         onNotasChange={handleNotasChange}
-                        onSymptomsChange={handleSymptomsChange}></Consulta>
+                        onSymptomsChange={handleSymptomsChange}
+                    />
                 );
             case "Procedimentos":
                 return (
-                    <Procedimentos onSelectedExamsChange={handleSelectedExamsChange} ></Procedimentos>
+                    <Procedimentos selectedExams={selectedExams}
+                        onSelectedExamsChange={handleSelectedExamsChange}
+                    />
                 );
             case "Diagnóstico":
                 return (
