@@ -12,7 +12,13 @@ export default function Home() {
 
   const [selectedOption, setSelectedOption] = useState("Painel");
   let content;
-  
+
+  const [showNovaConsulta, setShowNovaConsulta] = useState(true);
+
+  const handleCloseNovaConsulta = () => {
+    setShowNovaConsulta(false); // This will hide the NovaConsulta component
+  };
+
   const style = {
     container: {
       margin: 0,
@@ -103,7 +109,7 @@ export default function Home() {
       marginTop: 5,
     },
   };
-  
+
 
   switch (selectedOption) {
     case "Painel":
@@ -113,7 +119,7 @@ export default function Home() {
       break;
     case "Pacientes":
       content = (
-  
+
         <Patients></Patients>
       );
       break;
@@ -131,7 +137,18 @@ export default function Home() {
       break;
     case "Nova Consulta":
       content = (
-        <NovaConsulta></NovaConsulta>
+
+        <>
+
+          {showNovaConsulta ? (
+            <NovaConsulta onClose={handleCloseNovaConsulta} />
+          ) : (
+            <Painel></Painel>
+          )}
+
+        </>
+
+
       );
       break;
     case "Paciente":

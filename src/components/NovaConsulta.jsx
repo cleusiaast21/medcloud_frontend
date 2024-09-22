@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-export default function NovaConsulta() {
-
+export default function NovaConsulta({ onClose }) {
     
+    const navigate = useNavigate();
+
     const [doctors, setDoctors] = useState([]);
     const [filteredDoctors, setFilteredDoctors] = useState([]);
+    const [errorMessage, setErrorMessage] = useState('');
     const [formData, setFormData] = useState({
         nomeCompleto: '',
         numeroIdentificacao: '',
@@ -18,62 +21,8 @@ export default function NovaConsulta() {
         specialty: '',
         medico: '',
     });
-
-    const consulta = {
-        container: {
-          margin: 20,
-          background: "white",
-          borderRadius: 10,
-          height: "85vh",
-          boxShadow: "1px 1px 1px 1px rgba(0, 0, 0, 0.2)",
-          fontFamily: "Poppins",
-          overflowY: "scroll",
-        },
-        title: {
-          color: "#2DA9B5",
-          fontSize: 18,
-          marginLeft: 30,
-        },
-        form: {
-          display: "flex",
-          marginLeft: 30,
-        },
-        label: {
-          marginBottom: 28,
-        },
-        labels: {
-          width: "18%",
-          display: "flex",
-          flexDirection: "column",
-          textAlign: "right",
-          marginRight: 15,
-        },
-        inputs: {
-          display: "flex",
-          flexDirection: "column",
-          width: "30%",
-        },
-        input: {
-          border: "1.5px solid rgba(128,128,128,0.2)",
-          padding: 5,
-          borderRadius: 5,
-          width: "100%",
-        },
-        button: {
-          borderRadius: 8,
-          background: "#2DA9B5",
-          color: "white",
-          padding: 3,
-          borderColor: "#2DA9B5",
-          paddingTop: 6,
-          paddingBottom: 6,
-          paddingRight: 15,
-          paddingLeft: 15,
-          border: "none",
-          fontWeight: "bold",
-          cursor: "pointer",
-        },
-      };
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
 
     useEffect(() => {
         const fetchDoctors = async () => {
@@ -97,37 +46,71 @@ export default function NovaConsulta() {
         }
     }, [formData.specialty, doctors]);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleChange = async (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+
+        if (name === 'numeroIdentificacao' && value) {
+            try {
+                const response = await axios.get(`http://localhost:5000/api/pacientes/exists/${value}`);
+                if (response.data.exists) {
+                    const pacienteData = response.data.paciente;
+                    setFormData({
+                        nomeCompleto: pacienteData.nomeCompleto,
+                        numeroIdentificacao: pacienteData.numeroIdentificacao,
+                        dataNascimento: pacienteData.dataNascimento.split('T')[0],
+                        sexo: pacienteData.sexo,
+                        telefonePrincipal: pacienteData.telefonePrincipal,
+                        telefoneAlternativo: pacienteData.telefoneAlternativo,
+                        email: pacienteData.email,
+                        specialty: formData.specialty,
+                        medico: formData.medico
+                    });
+                } else {
+                    setErrorMessage('Número de Identificação não encontrado');
+                }
+            } catch (error) {
+                console.error('Erro ao verificar número de identificação:', error);
+            }
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
     
         try {
-            // Primeiro, cria o paciente
-            const pacienteRes = await axios.post('http://localhost:5000/api/pacientes', {
-                nomeCompleto: formData.nomeCompleto,
-                numeroIdentificacao: formData.numeroIdentificacao,
-                dataNascimento: formData.dataNascimento,
-                sexo: formData.sexo,
-                telefonePrincipal: formData.telefonePrincipal,
-                telefoneAlternativo: formData.telefoneAlternativo,
-                email: formData.email,
-            });
+            let numeroIdentificacao;
     
-            const numeroIdentificacao = pacienteRes.data.numeroIdentificacao;
+            // Check if the patient already exists
+            const response = await axios.get(`http://localhost:5000/api/pacientes/exists/${formData.numeroIdentificacao}`);
+            if (response.data.exists) {
+                // Patient already exists, use their identification number
+                numeroIdentificacao = response.data.paciente.numeroIdentificacao;
+            } else {
+                // Create a new patient if they don't exist
+                const pacienteRes = await axios.post('http://localhost:5000/api/pacientes', {
+                    nomeCompleto: formData.nomeCompleto,
+                    numeroIdentificacao: formData.numeroIdentificacao,
+                    dataNascimento: formData.dataNascimento,
+                    sexo: formData.sexo,
+                    telefonePrincipal: formData.telefonePrincipal,
+                    telefoneAlternativo: formData.telefoneAlternativo,
+                    email: formData.email,
+                });
+                numeroIdentificacao = pacienteRes.data.numeroIdentificacao;
+            }
     
-            // Encontra o ID do médico selecionado
+            // Find the selected doctor
             const selectedDoctor = doctors.find(doctor => doctor.nomeCompleto === formData.medico);
             const funcionarioId = selectedDoctor ? selectedDoctor.funcionarioId : null;
     
             if (!funcionarioId) {
-                alert('Erro ao encontrar o médico selecionado');
+                setModalMessage('Erro ao encontrar o médico selecionado');
+                setIsModalOpen(true);
                 return;
             }
     
-            // Em seguida, cria a consulta associada ao paciente
+            // Create the consultation
             await axios.post('http://localhost:5000/api/consultas', {
                 specialty: formData.specialty,
                 medico: formData.medico,
@@ -136,29 +119,121 @@ export default function NovaConsulta() {
                 state: 'open'
             });
     
-            // Por fim, adiciona o paciente à lista de espera
+            // Add to waiting list
             await axios.post('http://localhost:5000/api/waitingList', {
                 pacienteId: numeroIdentificacao,
                 medicoId: funcionarioId,
             });
     
-            alert('Dados registrados com sucesso');
+            setModalMessage('Dados registrados com sucesso!');
+            setIsModalOpen(true);
     
         } catch (error) {
             console.error('Erro ao registrar dados:', error);
-            if (error.response) {
-                console.error('Response data:', error.response.data);
-                console.error('Response status:', error.response.status);
-                console.error('Response headers:', error.response.headers);
-            } else if (error.request) {
-                console.error('Request data:', error.request);
-            } else {
-                console.error('Error message:', error.message);
-            }
-            alert('Erro ao registrar dados');
+            setModalMessage('Erro ao registrar dados');
+            setIsModalOpen(true);
         }
     };
     
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        onClose(); // Call the parent component's close function
+    };
+
+    const modalStyles = {
+        modalBackdrop: {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dimmed background
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+        },
+        modalContainer: {
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            textAlign: 'center',
+            boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+            width: '400px',
+            zIndex: 1001,
+        },
+        closeButton: {
+            backgroundColor: '#2DA9B5',
+            color: 'white',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+        }
+    };
+
+
+    const consulta = {
+        container: {
+            margin: 20,
+            background: "white",
+            borderRadius: 10,
+            height: "85vh",
+            boxShadow: "1px 1px 1px 1px rgba(0, 0, 0, 0.2)",
+            fontFamily: "Poppins",
+            overflowY: "scroll",
+        },
+        title: {
+            color: "#2DA9B5",
+            fontSize: 18,
+            marginLeft: 30,
+        },
+        form: {
+            display: "flex",
+            marginLeft: 30,
+        },
+        label: {
+            marginBottom: 28,
+        },
+        labels: {
+            width: "18%",
+            display: "flex",
+            flexDirection: "column",
+            textAlign: "right",
+            marginRight: 15,
+        },
+        inputs: {
+            display: "flex",
+            flexDirection: "column",
+            width: "30%",
+        },
+        input: {
+            border: "1.5px solid rgba(128,128,128,0.2)",
+            padding: 5,
+            borderRadius: 5,
+            width: "100%",
+        },
+        button: {
+            borderRadius: 8,
+            background: "#2DA9B5",
+            color: "white",
+            padding: 3,
+            borderColor: "#2DA9B5",
+            paddingTop: 6,
+            paddingBottom: 6,
+            paddingRight: 15,
+            paddingLeft: 15,
+            border: "none",
+            fontWeight: "bold",
+            cursor: "pointer",
+        },
+        error: {
+            color: 'red',
+            fontWeight: 'bold',
+        },
+    };
     
 
     return (
@@ -239,6 +314,15 @@ export default function NovaConsulta() {
             <div style={{ display: "flex", margin: 20, justifyContent: "end" }}>
                 <button style={consulta.button} onClick={handleSubmit} type="submit">Salvar</button>
             </div>
+
+            {isModalOpen && (
+                <div style={modalStyles.modalBackdrop}>
+                    <div style={modalStyles.modalContainer}>
+                        <p>{modalMessage}</p>
+                        <button style={modalStyles.closeButton} onClick={handleCloseModal}>OK</button>
+                    </div>
+                </div>
+            )}
         </div>
 
     );

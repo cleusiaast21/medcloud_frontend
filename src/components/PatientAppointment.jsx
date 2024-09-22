@@ -225,7 +225,7 @@ export default function PatientAppointment({ paciente }) {
           });
       
           if (response.status === 200) {
-            alert('Consulta saved and removed from waiting list successfully!');
+            alert('Consulta saved!');
           } else {
             alert('Failed to save consulta.');
           }
