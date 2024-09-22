@@ -133,6 +133,7 @@ export default function NovaConsulta() {
                 medico: formData.medico,
                 pacienteId: numeroIdentificacao,
                 medicoId: funcionarioId,
+                state: 'open'
             });
     
             // Por fim, adiciona o paciente à lista de espera

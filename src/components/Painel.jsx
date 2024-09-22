@@ -28,7 +28,7 @@ export default function Painel() {
                 // Fetch patient details for each waiting list entry
                 const patientRequests = waitingListData.map(position => 
                     axios.get(`http://localhost:5000/api/pacientes/getPaciente/${position.pacienteId}`)
-                );
+                );// /getPaciente/:pacienteId
     
                 const patientResponses = await Promise.all(patientRequests);
                 const patientData = patientResponses.reduce((acc, curr) => {

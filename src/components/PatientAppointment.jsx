@@ -8,12 +8,14 @@ import Receita from './Receita.js';
 import Procedimentos from './Procedimentos.js';
 import Informacoes from './Informacoes.js';
 import Consulta from './Consulta.js';
+import { useAuth } from '../AuthContext'; // Import your AuthContext
 
 export default function PatientAppointment({ paciente }) {
 
 
     //vitals, comments, consultaData, selectedExams, acceptedDiseases
 
+    const { state } = useAuth();
     const currentDate = new Date();
     const [selectedTab, setSelectedTab] = useState("Informações");
     const [predictions, setPredictions] = useState(null);
@@ -61,7 +63,7 @@ export default function PatientAppointment({ paciente }) {
         }
     };
 
-    const [selectedExams, setSelectedExams] = useState({});
+    const [selectedExams, setSelectedExams] = useState([]);
 
     // Function to update the selected exams state
     const handleSelectedExamsChange = (updatedExams) => {
@@ -158,6 +160,9 @@ export default function PatientAppointment({ paciente }) {
             console.log('Selected Exams:', selectedExams)
         }
 
+        if (selectedTab === "Receita")
+            handleFinalizarClick();
+
         const currentIndex = tabs.indexOf(selectedTab);
         const nextIndex = (currentIndex + 1) % tabs.length;
         setSelectedTab(tabs[nextIndex]);
@@ -189,6 +194,47 @@ export default function PatientAppointment({ paciente }) {
                 padding: 5,
             };
     };
+
+    const handleFinalizarClick = async () => {
+        try {
+            // Fetch the consulta ID based on pacienteID and medico
+            const responseConsulta = await axios.get('http://localhost:5000/api/consultas/findConsulta', {
+                params: {
+                    pacienteID: paciente.numeroIdentificacao,
+                    medico: state.user.nomeCompleto
+                }
+            });
+    
+            const consultaId = responseConsulta.data.consultaId;
+            console.log("Consulta:", consultaId);
+    
+            // Prepare the data to save
+            const dataToSave = {
+                vitals,
+                comments,
+                consultaData,
+                selectedExams,
+                acceptedDiseases
+            };
+    
+            // Update the consulta document with the data
+            const response = await axios.put('http://localhost:5000/api/consultas/update', {
+                consultaId: consultaId,
+                data: dataToSave    // Send the data in the body
+            });
+    
+            if (response.status === 200) {
+                alert('Consulta saved successfully!');
+            } else {
+                alert('Failed to save consulta.');
+            }
+        } catch (error) {
+            console.error('Error saving consulta:', error);
+            alert('An error occurred while saving the consulta.');
+        }
+    };
+    
+
 
     const consulta = {
         container: {

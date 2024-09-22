@@ -1,17 +1,20 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import { categories } from '../assets/auxiliaryData.jsx';
 
-export default function Procedimentos({ selectedExams, onSelectedExamsChange }) {
+export default function Procedimentos({ selectedExams = [], onSelectedExamsChange }) {
+    // Ensure selectedExams is always an array
+    const safeSelectedExams = Array.isArray(selectedExams) ? selectedExams : [];
+
     // Update the selected tests state in the parent component
-    const handleCheckboxChange = (category, test) => {
-        const updatedExams = {
-            ...selectedExams,
-            [category]: {
-                ...selectedExams[category],
-                [test]: !selectedExams[category]?.[test],
-            }
-        };
+    const handleCheckboxChange = (test) => {
+        let updatedExams;
+
+        if (safeSelectedExams.includes(test)) {
+            updatedExams = safeSelectedExams.filter(exam => exam !== test);
+        } else {
+            updatedExams = [...safeSelectedExams, test];
+        }
 
         // Call the parent's callback to update its state
         if (onSelectedExamsChange) {
@@ -20,12 +23,8 @@ export default function Procedimentos({ selectedExams, onSelectedExamsChange }) 
     };
 
     const patient = {
-        attribute: {
-            color: "#808080",
-        },
-        value: {
-            color: "#2DA9B5",
-        },
+        attribute: { color: "#808080" },
+        value: { color: "#2DA9B5" },
         options: {
             border: "0.5px solid rgba(128,128,128,0.2)",
             borderRadius: 10,
@@ -105,8 +104,8 @@ export default function Procedimentos({ selectedExams, onSelectedExamsChange }) 
                                 <label key={test} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                     <input
                                         type="checkbox"
-                                        checked={selectedExams[category]?.[test] || false} // Use selectedExams prop
-                                        onChange={() => handleCheckboxChange(category, test)}
+                                        checked={safeSelectedExams.includes(test)}
+                                        onChange={() => handleCheckboxChange(test)}
                                         style={{ accentColor: '#00a2c9' }}
                                     />
                                     {test}

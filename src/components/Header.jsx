@@ -10,6 +10,7 @@ import {
 import { useAuth } from '../AuthContext'; // Import your AuthContext
 
 export default function Header({ selectedOption }) {
+    
     const [menuVisible, setMenuVisible] = useState(false);
     const { state } = useAuth(); 
     const { dispatch } = useAuth();
