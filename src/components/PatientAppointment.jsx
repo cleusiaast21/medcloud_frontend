@@ -197,44 +197,45 @@ export default function PatientAppointment({ paciente }) {
 
     const handleFinalizarClick = async () => {
         try {
-            // Fetch the consulta ID based on pacienteID and medico
-            const responseConsulta = await axios.get('http://localhost:5000/api/consultas/findConsulta', {
-                params: {
-                    pacienteID: paciente.numeroIdentificacao,
-                    medico: state.user.nomeCompleto
-                }
-            });
-    
-            const consultaId = responseConsulta.data.consultaId;
-            console.log("Consulta:", consultaId);
-    
-            // Prepare the data to save
-            const dataToSave = {
-                vitals,
-                comments,
-                consultaData,
-                selectedExams,
-                acceptedDiseases
-            };
-    
-            // Update the consulta document with the data
-            const response = await axios.put('http://localhost:5000/api/consultas/update', {
-                consultaId: consultaId,
-                data: dataToSave    // Send the data in the body
-            });
-    
-            if (response.status === 200) {
-                alert('Consulta saved successfully!');
-            } else {
-                alert('Failed to save consulta.');
+          const responseConsulta = await axios.get('http://localhost:5000/api/consultas/findConsulta', {
+            params: {
+              pacienteID: paciente.numeroIdentificacao, // Ensure this matches the backend parameter
+              medico: state.user.nomeCompleto             // Make sure this is the correct doctor ID
             }
+          });
+      
+          const consultaId = responseConsulta.data.consultaId;
+          const pacienteId = paciente.numeroIdentificacao; // Capture pacienteId from your data
+      
+          console.log("Consulta:", consultaId);
+          console.log("Paciente ID:", pacienteId);
+      
+          const dataToSave = {
+            vitals,
+            comments,
+            consultaData,
+            selectedExams,
+            acceptedDiseases
+          };
+      
+          const response = await axios.put(`http://localhost:5000/api/consultas/update`, {
+            consultaId: consultaId,  // Ensure this matches the backend parameter
+            pacienteId: pacienteId,  // Pass pacienteId for deletion
+            data: dataToSave
+          });
+      
+          if (response.status === 200) {
+            alert('Consulta saved and removed from waiting list successfully!');
+          } else {
+            alert('Failed to save consulta.');
+          }
         } catch (error) {
-            console.error('Error saving consulta:', error);
-            alert('An error occurred while saving the consulta.');
+          console.error('Error saving consulta:', error);
+          alert('An error occurred while saving the consulta.');
         }
-    };
+      };
+      
     
-
 
     const consulta = {
         container: {
