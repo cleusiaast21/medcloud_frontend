@@ -5,129 +5,38 @@ const medicamentos = [
 
   {
     data: new Date().getFullYear,
-    medicamento: 'Ibuprofeno',
-    quantidade: 24,
-    intervalo: 8,
+    medicamento: 'Abacavir',
+    quantidade: '100mg',
+    intervalo: '2vezes/dia',
   },
   {
     data: new Date().getFullYear,
-    medicamento: 'Paracetamol',
-    quantidade: 24,
-    intervalo: 8,
-  },
-  {
-    data: new Date().getFullYear,
-    medicamento: 'Coarten',
-    quantidade: 6,
-    intervalo: 12,
-  },
-  {
-    data: new Date().getFullYear,
-    medicamento: 'Dipirona',
-    quantidade: 10,
-    intervalo: 8,
-  },
-
+    medicamento: 'Lamivudina',
+    quantidade: '200mg',
+    intervalo: '2vezes/dia',
+  }
 ]
 
 
 const appointments = [
   {
-    patient: "Odara Tchisolyukombe",
+    patient: "Anastácia Chipindula",
     doctor: "Cleusia dos Anjos",
     hora: "08:30",
-    data: "12/03/2024",
+    data: "30/09/2024",
   },
   {
     patient: "Odara Tchisolyukombe",
     doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
+    hora: "09:30",
+    data: "30/09/2024",
   },
   {
-    patient: "Odara Tchisolyukombe",
+    patient: "Áurea Tchisolyukombe",
     doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
-  {
-    patient: "Odara Tchisolyukombe",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "12/03/2024",
-  },
+    hora: "10:30",
+    data: "30/09/2024",
+  }
 ];
 
 const waitingList = [

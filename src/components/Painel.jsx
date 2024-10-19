@@ -165,7 +165,6 @@ export default function Painel() {
                             <th style={style.tableTitle}>Hora</th>
                             <th style={style.tableTitle}>Data</th>
                             <th style={style.tableTitle}>Paciente</th>
-                            <th style={style.tableTitle}>Médico</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -174,7 +173,6 @@ export default function Painel() {
                                 <td style={style.tableContent}>{appointment.hora}</td>
                                 <td style={style.tableContent}>{appointment.data}</td>
                                 <td style={style.tableContent}>{appointment.patient}</td>
-                                <td style={style.tableContent}>{appointment.doctor}</td>
                             </tr>
                         ))}
                     </tbody>

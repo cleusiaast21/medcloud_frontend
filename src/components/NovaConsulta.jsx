@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import bcrypt from 'bcryptjs';
 
 export default function NovaConsulta({ onClose }) {
     
-    const navigate = useNavigate();
 
     const [doctors, setDoctors] = useState([]);
     const [filteredDoctors, setFilteredDoctors] = useState([]);
@@ -80,6 +79,10 @@ export default function NovaConsulta({ onClose }) {
     
         try {
             let numeroIdentificacao;
+            const password = 'Medcloud@2024'; // The password to be hashed
+    
+            // Hash the password before sending it
+            const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
     
             // Check if the patient already exists
             const response = await axios.get(`http://localhost:5000/api/pacientes/exists/${formData.numeroIdentificacao}`);
@@ -96,6 +99,8 @@ export default function NovaConsulta({ onClose }) {
                     telefonePrincipal: formData.telefonePrincipal,
                     telefoneAlternativo: formData.telefoneAlternativo,
                     email: formData.email,
+                    // Send hashed password (if required for patient creation)
+                    password: hashedPassword,
                 });
                 numeroIdentificacao = pacienteRes.data.numeroIdentificacao;
             }
@@ -116,13 +121,17 @@ export default function NovaConsulta({ onClose }) {
                 medico: formData.medico,
                 pacienteId: numeroIdentificacao,
                 medicoId: funcionarioId,
-                state: 'open'
+                state: 'open',
+                // Optionally send the hashed password (if needed for consultation)
+                password: hashedPassword,
             });
     
             // Add to waiting list
             await axios.post('http://localhost:5000/api/waitingList', {
                 pacienteId: numeroIdentificacao,
                 medicoId: funcionarioId,
+                // Optionally send hashed password
+                password: hashedPassword,
             });
     
             setModalMessage('Dados registrados com sucesso!');
@@ -134,6 +143,7 @@ export default function NovaConsulta({ onClose }) {
             setIsModalOpen(true);
         }
     };
+    
     
 
     const handleCloseModal = () => {
