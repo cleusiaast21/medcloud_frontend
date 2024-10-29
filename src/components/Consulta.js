@@ -15,12 +15,10 @@ export default function Consulta({subjectiveText,
 
     
     const handleSelectChange = (selectedOptions) => {
-        const symptoms = selectedOptions.reduce((acc, option) => {
-            acc[option.value] = 1;
-            return acc;
-        }, {});
-        onSymptomsChange(symptoms); // Call parent handler
+        const symptoms = selectedOptions.map(option => option.value); 
+        onSymptomsChange(symptoms); // Call parent handler with symptoms array
     };
+    
 
     const customStyles = {
         control: (provided, state) => ({

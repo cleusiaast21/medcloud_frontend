@@ -203,12 +203,19 @@ export default function PatientAppointment({ paciente }) {
               medico: state.user.nomeCompleto             // Make sure this is the correct doctor ID
             }
           });
+
+          const responseConsultaCloud = await axios.get('http://localhost:5000/api/consultas/findConsultaCloud', {
+            params: {
+              pacienteID: paciente.numeroIdentificacao, // Ensure this matches the backend parameter
+              medico: state.user.nomeCompleto           // Make sure this is the correct doctor ID
+            }
+          });
       
           const consultaId = responseConsulta.data.consultaId;
+          const consultaIdCloud = responseConsultaCloud.data.consultaId;
+
+        
           const pacienteId = paciente.numeroIdentificacao; // Capture pacienteId from your data
-      
-          console.log("Consulta:", consultaId);
-          console.log("Paciente ID:", pacienteId);
       
           const dataToSave = {
             vitals,
@@ -220,6 +227,7 @@ export default function PatientAppointment({ paciente }) {
       
           const response = await axios.put(`http://localhost:5000/api/consultas/update`, {
             consultaId: consultaId,  // Ensure this matches the backend parameter
+            consultaIdCloud: consultaIdCloud,
             pacienteId: pacienteId,  // Pass pacienteId for deletion
             data: dataToSave
           });
@@ -236,7 +244,6 @@ export default function PatientAppointment({ paciente }) {
       };
       
     
-
     const consulta = {
         container: {
             margin: 20,

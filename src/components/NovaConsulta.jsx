@@ -122,7 +122,6 @@ export default function NovaConsulta({ onClose }) {
                 pacienteId: numeroIdentificacao,
                 medicoId: funcionarioId,
                 state: 'open',
-                // Optionally send the hashed password (if needed for consultation)
                 password: hashedPassword,
             });
     
