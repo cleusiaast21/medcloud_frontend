@@ -19,6 +19,7 @@ export default function Home() {
     setShowNovaConsulta(false); // This will hide the NovaConsulta component
   };
 
+
   const style = {
     container: {
       margin: 0,
@@ -125,7 +126,9 @@ export default function Home() {
       break;
     case "Agenda":
       content = (
-        <PatientAppointment></PatientAppointment>
+
+          <PatientAppointment  />
+     
       );
       break;
     case "Estatísticas":

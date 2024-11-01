@@ -10,8 +10,49 @@ import Informacoes from './Informacoes.js';
 import Consulta from './Consulta.js';
 import { useAuth } from '../AuthContext'; // Import your AuthContext
 
-export default function PatientAppointment({ paciente }) {
+export default function PatientAppointment({ paciente, onClose }) {
 
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        onClose(); // Call the parent component's close function
+    };
+
+    const modalStyles = {
+        modalBackdrop: {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dimmed background
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+        },
+        modalContainer: {
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            textAlign: 'center',
+            boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+            width: '400px',
+            zIndex: 1001,
+        },
+        closeButton: {
+            backgroundColor: '#2DA9B5',
+            color: 'white',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+        }
+    };
 
     //vitals, comments, consultaData, selectedExams, acceptedDiseases
 
@@ -233,9 +274,11 @@ export default function PatientAppointment({ paciente }) {
           });
       
           if (response.status === 200) {
-            alert('Consulta saved!');
+            setModalMessage('Consulta registrada com sucesso!');
+            setIsModalOpen(true);
           } else {
-            alert('Failed to save consulta.');
+            setModalMessage('Falha ao registrar consulta!');
+            setIsModalOpen(true);
           }
         } catch (error) {
           console.error('Error saving consulta:', error);
@@ -644,6 +687,15 @@ export default function PatientAppointment({ paciente }) {
                 )}
                 <button style={consulta.button} onClick={handleNextClick}>{getButtonText()}</button>
             </div>
+
+            {isModalOpen && (
+                <div style={modalStyles.modalBackdrop}>
+                    <div style={modalStyles.modalContainer}>
+                        <p>{modalMessage}</p>
+                        <button style={modalStyles.closeButton} onClick={handleCloseModal}>OK</button>
+                    </div>
+                </div>
+            )}
         </div>
 
     );

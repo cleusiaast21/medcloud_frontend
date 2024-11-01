@@ -20,6 +20,7 @@ export default function NovaConsulta({ onClose }) {
         specialty: '',
         medico: '',
     });
+    
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
 
@@ -110,7 +111,7 @@ export default function NovaConsulta({ onClose }) {
             const funcionarioId = selectedDoctor ? selectedDoctor.funcionarioId : null;
     
             if (!funcionarioId) {
-                setModalMessage('Erro ao encontrar o médico selecionado');
+                setModalMessage('Erro ao encontrar o médico selecionado.');
                 setIsModalOpen(true);
                 return;
             }
@@ -142,7 +143,6 @@ export default function NovaConsulta({ onClose }) {
             setIsModalOpen(true);
         }
     };
-    
     
 
     const handleCloseModal = () => {

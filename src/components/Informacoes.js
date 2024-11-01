@@ -117,19 +117,6 @@ const Informacoes = forwardRef((props, ref) => {
         }
     };
 
-    const diagnostico = {
-        button: {
-            display: "flex",
-            alignItems: "center",
-            fontFamily: "Poppins",
-            borderRadius: 8,
-            color: "white",
-            border: "none",
-            background: "#2DA9B5",
-            margin: 4,
-            cursor: "pointer",
-        }
-    };
 
     return (
         <div>

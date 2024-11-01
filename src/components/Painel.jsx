@@ -24,25 +24,25 @@ export default function Painel() {
                 });
                 const waitingListData = response.data;
                 setWaitingList(waitingListData);
-    
+
                 // Fetch patient details for each waiting list entry
-                const patientRequests = waitingListData.map(position => 
+                const patientRequests = waitingListData.map(position =>
                     axios.get(`http://localhost:5000/api/pacientes/getPaciente/${position.pacienteId}`)
                 );// /getPaciente/:pacienteId
-    
+
                 const patientResponses = await Promise.all(patientRequests);
                 const patientData = patientResponses.reduce((acc, curr) => {
                     const paciente = curr.data;
                     acc[paciente.numeroIdentificacao] = paciente; // Use numeroIdentificacao as the key
                     return acc;
                 }, {});
-    
+
                 setPatients(patientData);
             } catch (error) {
                 console.error('Error fetching waiting list or patient details:', error);
             }
         };
-    
+
         fetchWaitingList();
     }, [funcionarioId]);
 
@@ -50,9 +50,26 @@ export default function Painel() {
         setSelectedPatient(patients[pacienteId]);
     };
 
+
+    const [showPatientAppointment, setShowPatientAppointment] = useState(true);
+
+    const handleClosePatientAppointment = () => {
+        setShowPatientAppointment(false); // This will hide the NovaConsulta component
+    };
+
+
     if (selectedPatient) {
-        return <PatientAppointment paciente={selectedPatient} />;
-    }
+        return (
+
+            <>
+                {showPatientAppointment ? (
+                    <PatientAppointment paciente={selectedPatient} onClose={handleClosePatientAppointment} />
+                ) : (
+                    <Painel></Painel>
+                )
+                }</>
+            )
+    };
 
     const style = {
         container: {
