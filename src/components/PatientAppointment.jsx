@@ -474,6 +474,7 @@ export default function PatientAppointment({ paciente, onClose }) {
                         onObjectivoChange={handleObjectivoChange}
                         onNotasChange={handleNotasChange}
                         onSymptomsChange={handleSymptomsChange}
+                        paciente={paciente}
                     />
                 );
             case "Procedimentos":
