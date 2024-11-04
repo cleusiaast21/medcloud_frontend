@@ -170,15 +170,18 @@ export default function PatientAppointment({ paciente, onClose }) {
             const response = await axios.post('http://localhost:5001/predict', { symptoms: consultaData.selectedSymptoms });
             const data = response.data;
             setPredictions(data);
-
-            // Filter positive predictions and save to positivePredictions
-            const positives = Object.keys(data).filter(disease => data[disease] === 1);
+    
+            // Filter positive predictions, remove "D_" prefix, and save to positivePredictions
+            const positives = Object.keys(data)
+                .filter(disease => data[disease] === 1)
+                .map(disease => disease.replace('D_', ''));  // Remove "D_" prefix
             setPositivePredictions(positives);
-            console.log(positives)
+            console.log(positives);
         } catch (error) {
             console.error('Error fetching predictions:', error);
         }
     };
+    
 
 
     const handleTabClick = (tab) => {
