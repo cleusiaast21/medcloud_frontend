@@ -13,7 +13,8 @@ export default function Home() {
     const [waitingList, setWaitingList] = useState([]); // Will store pending consultations
     const { state } = useAuth(); // Use authentication context
     const [patients, setPatients] = useState({}); // State to store patient details
-    const [selectedPatient, setSelectedPatient] = useState(null); // State for selected patient
+    const [selectedConsulta, setSelectedConsulta] = useState(null); // Store selected consulta
+    const [examInputs, setExamInputs] = useState({}); // Store inputs for each exam
     let content;
 
     const style = {
@@ -46,6 +47,16 @@ export default function Home() {
             borderRadius: 10,
             boxShadow: "1px 1px 1px 1px rgba(0, 0, 0, 0.2)",
             overflowY: "scroll",
+        },
+        rightPane: {
+            width: "70%",
+            background: "white",
+            height: "81vh",
+            margin: 10,
+            borderRadius: 10,
+            boxShadow: "1px 1px 1px 1px rgba(0, 0, 0, 0.2)",
+            overflowY: "scroll",
+            padding: 10
         },
         tableTitle: {
             color: "#2DA9B5",
@@ -87,6 +98,7 @@ export default function Home() {
             borderColor: "#2DA9B5",
             padding: 10,
             border: "none",
+            cursor: 'pointer'
         },
         waitingListPatient: {
             display: "flex",
@@ -105,10 +117,71 @@ export default function Home() {
             color: "#808080",
             marginTop: 5,
         },
+        input: {
+            border: "1.5px solid rgba(128,128,128,0.2)",
+            padding: 5,
+            borderRadius: 5,
+            width: "30%",
+        },
+        fileInput: {
+            border: "1.5px solid rgba(128,128,128,0.2)",
+            borderRadius: 5,
+            padding: 5,
+            width: "100%",
+        },
     };
 
-    const handleAtenderClick = (pacienteId) => {
-        setSelectedPatient(patients[pacienteId]);
+    const handleExamTypeChange = (e, examName) => {
+        const selectedType = e.target.value;
+        setExamInputs((prev) => ({
+            ...prev,
+            [examName]: { type: selectedType, value: "" },
+        }));
+    };
+
+    const handleExamInputChange = (e, examName) => {
+        const inputValue = e.target.value;
+        setExamInputs((prev) => ({
+            ...prev,
+            [examName]: { ...prev[examName], value: inputValue },
+        }));
+    };
+
+    const handleFileUpload = (e, examName) => {
+        const file = e.target.files[0];
+        setExamInputs((prev) => ({
+            ...prev,
+            [examName]: { ...prev[examName], value: file },
+        }));
+    };
+
+    const renderExamInput = (examName) => {
+        const exam = examInputs[examName];
+        if (!exam) return null;
+
+        switch (exam.type) {
+            case "text":
+                return (
+                    <textarea
+                        style={style.input}
+                        value={exam.value}
+                        onChange={(e) => handleExamInputChange(e, examName)}
+                        placeholder="Enter text"
+                    />
+                );
+            case "image":
+            case "pdf":
+                return (
+                    <input
+                        style={style.fileInput}
+                        type="file"
+                        accept={exam.type === "image" ? "image/*" : "application/pdf"}
+                        onChange={(e) => handleFileUpload(e, examName)}
+                    />
+                );
+            default:
+                return null;
+        }
     };
 
     // Function to fetch consultations where the state is "pending"
@@ -118,10 +191,12 @@ export default function Home() {
             const response = await axios.get('http://localhost:5000/api/consultas/pending');
             const pendingConsultations = response.data;
             setWaitingList(pendingConsultations); // Set the pending consultations into the waiting list
-    
+            console.log("Consultas: ", pendingConsultations)
             // Optionally fetch additional patient data if needed
             const patientsData = await fetchPatientsData(pendingConsultations);
             setPatients(patientsData);
+            console.log("Pacientes: ", patientsData)
+
         } catch (error) {
             console.error('Error fetching pending consultations:', error);
         }
@@ -146,30 +221,62 @@ export default function Home() {
         fetchPendingConsultations();
     });
 
-    // If a patient is selected, show the PatientAppointment component
-    if (selectedPatient) {
-        return <PatientAppointment paciente={selectedPatient} />;
-    }
+    const handleAtenderClick = (consulta) => {
+        alert("HELLO")
+        setSelectedConsulta(consulta);
+
+    };
 
     // Content rendering based on selected option
     switch (selectedOption) {
         case "Painel":
             content = (
-                <div style={style.waitingListContainer}>
-                    <p style={{ marginLeft: 40 }}>Lista de Espera</p>
-                    {waitingList.map((position) => {
-                        const patient = patients[position.pacienteId];
-                        return (
-                            <div style={style.waitingListPatient} key={position._id}>
-                                <div style={{ display: "flex", flexDirection: "column" }}>
-                                    <span style={style.patientName}>{patient ? patient.nomeCompleto : 'Nome não disponível'}</span>
-                                    <span style={style.doctorName}>{position.medicoNomeCompleto}</span>
+                <div style={{ display: "flex" }}>
+
+                    <div style={style.waitingListContainer}>
+
+                        <p style={{ marginLeft: 40 }}>Lista de Espera</p>
+
+                        {waitingList.map((position) => {
+                            return (
+                                <div style={style.waitingListPatient} key={position._id}>
+                                    <div style={{ display: "flex", flexDirection: "column" }}>
+                                        <span style={style.patientName}>Paciente: {position.pacienteNome}</span>
+                                        <span style={style.doctorName}>Médico: {position ? position.medico : 'Nome não disponível'}</span>
+                                    </div>
+                                    <button style={style.button} onClick={() => handleAtenderClick(position)}>Atender</button>
                                 </div>
-                                <button style={style.button} onClick={() => handleAtenderClick(position.pacienteId)}>Atender</button>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+
+                    </div>
+
+                    {selectedConsulta && (
+                        <div style={{ width: "70%", margin: 10 }}>
+                            <h3>Consulta Selecionada</h3>
+                            <p>Médico: {selectedConsulta.medico}</p>
+                            <p>Paciente: {selectedConsulta.pacienteNome}</p>
+                            <h4>Exames:</h4>
+                            {selectedConsulta.selectedExams.map((exam, index) => (
+                                <div key={index}>
+                                    <p>{exam}</p>
+                                    <select
+                                        style={style.input}
+                                        onChange={(e) => handleExamTypeChange(e, exam)}
+                                    >
+                                        <option value="">Selecione o tipo de ficheiro</option>
+                                        <option value="text">Texto</option>
+                                        <option value="image">Imagem</option>
+                                        <option value="pdf">PDF</option>
+                                    </select>
+                                    {renderExamInput(exam)}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                 </div>
+
             );
             break;
         case "Pacientes":

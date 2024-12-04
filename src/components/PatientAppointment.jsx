@@ -171,10 +171,10 @@ export default function PatientAppointment({ paciente, onClose }) {
             const data = response.data;
             setPredictions(data);
     
-            // Filter positive predictions, remove "D_" prefix, and save to positivePredictions
+            // Filtrar e salvar as predições positivas
             const positives = Object.keys(data)
                 .filter(disease => data[disease] === 1)
-                .map(disease => disease.replace('D_', ''));  // Remove "D_" prefix
+                .map(disease => disease.replace('D_', ''));  // Remove o prefixo "D_" 
             setPositivePredictions(positives);
             console.log(positives);
         } catch (error) {

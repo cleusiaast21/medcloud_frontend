@@ -75,7 +75,7 @@ export default function Options({ onOptionSelect, selectedOption: initialSelecte
         },
         novaConsulta: {
             display: 'flex',
-            flexDirection:'column',
+            flexDirection: 'column',
             justifyContent: 'flex-end',
             width: '90%',
             height: 90,
@@ -86,12 +86,12 @@ export default function Options({ onOptionSelect, selectedOption: initialSelecte
             cursor: 'pointer',
             borderRadius: 15,
         },
-        novaConsultaText:{
+        novaConsultaText: {
             display: 'flex',
-            color:'#2DA9B5',
+            color: '#2DA9B5',
             fontWeight: 'bold',
             fontSize: 14,
-            paddingLeft:5,
+            paddingLeft: 5,
 
         }
     }
@@ -136,14 +136,14 @@ export default function Options({ onOptionSelect, selectedOption: initialSelecte
                     </div>
                 ))}
 
-                <div  style={style.novaConsulta} onClick={() => handleOptionSelect("Nova Consulta")}>
+                <div style={style.novaConsulta} onClick={() => handleOptionSelect("Nova Consulta")}>
 
                     <span style={style.novaConsultaText}>Nova </span>
                     <span style={style.novaConsultaText}>consulta</span>
-                    <ArrowRight size={20} color='#2DA9B5' weight='bold' style={{paddingLeft:5}} />
+                    <ArrowRight size={20} color='#2DA9B5' weight='bold' style={{ paddingLeft: 5 }} />
 
                 </div>
-                
+
             </div>
 
 

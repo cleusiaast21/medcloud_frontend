@@ -80,6 +80,7 @@ export default function NovaConsulta({ onClose }) {
     
         try {
             let numeroIdentificacao;
+            let nome;
             const password = 'Medcloud@2024'; // The password to be hashed
     
             // Hash the password before sending it
@@ -90,6 +91,7 @@ export default function NovaConsulta({ onClose }) {
             if (response.data.exists) {
                 // Patient already exists, use their identification number
                 numeroIdentificacao = response.data.paciente.numeroIdentificacao;
+                nome = response.data.paciente.nomeCompleto;
             } else {
                 // Create a new patient if they don't exist
                 const pacienteRes = await axios.post('http://localhost:5000/api/pacientes', {
@@ -121,6 +123,7 @@ export default function NovaConsulta({ onClose }) {
                 specialty: formData.specialty,
                 medico: formData.medico,
                 pacienteId: numeroIdentificacao,
+                pacienteNome: formData.nomeCompleto,
                 medicoId: funcionarioId,
                 state: 'open',
                 password: hashedPassword,

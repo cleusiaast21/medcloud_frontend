@@ -5,37 +5,93 @@ const medicamentos = [
 
   {
     data: new Date().getFullYear,
-    medicamento: 'Abacavir',
-    quantidade: '100mg',
+    medicamento: 'Coartem',
+    quantidade: '600mg',
     intervalo: '2vezes/dia',
   },
   {
     data: new Date().getFullYear,
-    medicamento: 'Lamivudina',
-    quantidade: '200mg',
-    intervalo: '2vezes/dia',
+    medicamento: 'Clavamox',
+    quantidade: '500mg',
+    intervalo: '12h',
   }
 ]
 
+const prescriptions = [
+  {
+    disease: "Gripe Comum",
+    medications: [
+      {
+        name: "Paracetamol",
+        quantity: "500 mg",
+        interval: "3 vezes/dia"
+      },
+      {
+        name: "Loratadina",
+        quantity: "10 mg",
+        interval: "1 vez/dia"
+      }
+    ]
+  },
+  {
+    disease: "Dor de Garganta",
+    medications: [
+      {
+        name: "Ibuprofeno",
+        quantity: "400 mg",
+        interval: "3 vezes/dia"
+      },
+      {
+        name: "Benzocaína (spray)",
+        quantity: "Aplicar conforme necessário",
+        interval: "2 vezes/dia"
+      }
+    ]
+  },
+  {
+    disease: "Amigdalite",
+    medications: [
+      {
+        name: "Amoxicilina",
+        quantity: "500 mg",
+        interval: "3 vezes/dia"
+      },
+      {
+        name: "Ibuprofeno",
+        quantity: "400 mg",
+        interval: "3 vezes/dia"
+      }
+    ]
+  },
+  {
+    disease: "Bronquite",
+    medications: [
+      {
+        name: "Azitromicina",
+        quantity: "500 mg",
+        interval: "1 vez/dia durante 3 dias"
+      },
+      {
+        name: "Salbutamol (inalador)",
+        quantity: "Conforme necessário",
+        interval: "2 vezes/dia"
+      }
+    ]
+  }
+];
 
 const appointments = [
-  {
-    patient: "Anastácia Chipindula",
-    doctor: "Cleusia dos Anjos",
-    hora: "08:30",
-    data: "30/09/2024",
-  },
   {
     patient: "Odara Tchisolyukombe",
     doctor: "Cleusia dos Anjos",
     hora: "09:30",
-    data: "30/09/2024",
+    data: "05/11/2024",
   },
   {
     patient: "Áurea Tchisolyukombe",
     doctor: "Cleusia dos Anjos",
     hora: "10:30",
-    data: "30/09/2024",
+    data: "05/11/2024",
   }
 ];
 
@@ -178,4 +234,4 @@ const patientsList = [
   },
 ];
 
-export { appointments, waitingList, paciente, patientsList, medicamentos };
+export { appointments, prescriptions, waitingList, paciente, patientsList, medicamentos };
