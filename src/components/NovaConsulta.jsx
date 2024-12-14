@@ -133,7 +133,6 @@ export default function NovaConsulta({ onClose }) {
             await axios.post('http://localhost:5000/api/waitingList', {
                 pacienteId: numeroIdentificacao,
                 medicoId: funcionarioId,
-                // Optionally send hashed password
                 password: hashedPassword,
             });
     

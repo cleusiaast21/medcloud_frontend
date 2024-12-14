@@ -11,10 +11,19 @@ import PatientAppointment from './PatientAppointment.jsx';
 
 export default function Painel() {
     const [waitingList, setWaitingList] = useState([]);
+    const [unfinishedConsultas, setUnfinishedConsultas] = useState([]);
     const { state } = useAuth();
     const funcionarioId = state.user.funcionarioId;
     const [patients, setPatients] = useState({}); // State to store patient details
     const [selectedPatient, setSelectedPatient] = useState(null); // State for selected patient
+    const [showModal, setShowModal] = useState(false);
+    const [resultConsulta, setResultConsulta] = useState({})
+    const [diagnostico, setDiagnostico] = useState("");
+
+    const handleSeeResults = (position) => {
+        setShowModal(true);
+        setResultConsulta(position);
+    };
 
     useEffect(() => {
         const fetchWaitingList = async () => {
@@ -28,7 +37,17 @@ export default function Painel() {
                 // Fetch patient details for each waiting list entry
                 const patientRequests = waitingListData.map(position =>
                     axios.get(`http://localhost:5000/api/pacientes/getPaciente/${position.pacienteId}`)
-                );// /getPaciente/:pacienteId
+                );
+
+                // Fetch consultas with results
+                const results = await axios.get('http://localhost:5000/api/consultas/findExamResults');
+
+                const resultsData = results.data.consultas;
+
+                setUnfinishedConsultas(resultsData);
+
+                console.log("Consultas: ", resultsData)
+
 
                 const patientResponses = await Promise.all(patientRequests);
                 const patientData = patientResponses.reduce((acc, curr) => {
@@ -50,13 +69,11 @@ export default function Painel() {
         setSelectedPatient(patients[pacienteId]);
     };
 
-
     const [showPatientAppointment, setShowPatientAppointment] = useState(true);
 
     const handleClosePatientAppointment = () => {
-        setShowPatientAppointment(false); // This will hide the NovaConsulta component
+        setShowPatientAppointment(false);
     };
-
 
     if (selectedPatient) {
         return (
@@ -68,7 +85,7 @@ export default function Painel() {
                     <Painel></Painel>
                 )
                 }</>
-            )
+        )
     };
 
     const style = {
@@ -94,9 +111,9 @@ export default function Painel() {
             overflowY: "scroll",
         },
         waitingListContainer: {
-            width: "30%",
+            width: "100%",
             background: "white",
-            height: "85vh",
+            height: "43vh",
             margin: 10,
             borderRadius: 10,
             boxShadow: "1px 1px 1px 1px rgba(0, 0, 0, 0.2)",
@@ -161,13 +178,39 @@ export default function Painel() {
             fontSize: 11,
             color: "#808080",
             marginTop: 5,
+        },
+        input: {
+            border: "1.5px solid rgba(128,128,128,0.5)",
+            padding: 5,
+            borderRadius: 5,
+            width: "40%",
+            marginLeft: 5
         }
     };
+
+    const handleUpdateDiagnostico = () => {
+        // Split the diagnoses into an array by commas
+        const acceptedDiseases = diagnostico.split(",").map((d) => d.trim());
+
+        // Send the update to the backend
+        axios
+            .put(`http://localhost:5000/api/consultas/addDiagnostic/${resultConsulta._id}`, {
+                acceptedDiseases,
+            })
+            .then((response) => {
+                console.log("Diagnóstico atualizado com sucesso:", response.data);
+                // Optionally close the modal or provide feedback
+            })
+            .catch((error) => {
+                console.error("Erro ao atualizar diagnóstico:", error);
+            });
+    };
+
 
     return (
         <div style={style.containersList}>
             <div style={style.appointmentsContainer}>
-                <p>Marcações para hoje</p>
+                <p>Marcações para Hoje</p>
 
                 <table
                     style={{
@@ -195,25 +238,132 @@ export default function Painel() {
                     </tbody>
                 </table>
             </div>
-            <div style={style.waitingListContainer}>
-                <p style={{ marginLeft: 40 }}>Lista de Espera</p>
 
-                {waitingList.map((position) => {
+            <div style={{ width: "30%" }}>
 
-                    // Fetch patient data
-                    const patient = patients[position.pacienteId];
 
-                    return (
-                        <div style={style.waitingListPatient} key={position._id}>
-                            <div style={{ display: "flex", flexDirection: "column" }}>
-                                <span style={style.patientName}>{patient ? patient.nomeCompleto : 'Nome não disponível'}</span>
-                                <span style={style.doctorName}>{position.medicoNomeCompleto}</span>
+                <div style={style.waitingListContainer}>
+                    <p style={{ marginLeft: 40 }}>Lista de Espera</p>
+
+                    {waitingList.map((position) => {
+
+                        // Fetch patient data
+                        const patient = patients[position.pacienteId];
+
+                        return (
+                            <div style={style.waitingListPatient} key={position._id}>
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <span style={style.patientName}>{patient ? patient.nomeCompleto : 'Nome não disponível'}</span>
+                                    <span style={style.doctorName}>{position.medicoNomeCompleto}</span>
+                                </div>
+                                <button style={style.button} onClick={() => handleAtenderClick(position.pacienteId)}>Atender</button>
                             </div>
-                            <button style={style.button} onClick={() => handleAtenderClick(position.pacienteId)}>Atender</button>
+                        );
+                    })}
+                </div>
+
+                <div style={style.waitingListContainer}>
+                    <p style={{ marginLeft: 40 }}>Consultas Pendentes</p>
+
+                    {unfinishedConsultas.map((position) => {
+                        return (
+                            <div style={style.waitingListPatient} key={position._id}>
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <span style={style.patientName}>Paciente: {position.pacienteNome}</span>
+                                    <span style={style.doctorName}>Médico: {position ? position.medico : 'Nome não disponível'}</span>
+                                </div>
+                                <button style={style.button} onClick={() => handleSeeResults(position)}>Ver resultados</button>
+                            </div>
+                        );
+                    })}
+
+                    {showModal && (
+                        <div
+                            style={{
+                                position: "fixed",
+                                top: 0,
+                                left: 0,
+                                width: "100vw",
+                                height: "100vh",
+                                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                zIndex: 1000,
+
+                            }}
+                        >
+                            <div
+                                style={{
+                                    backgroundColor: "#fff",
+                                    padding: 20,
+                                    borderRadius: 10,
+                                    width: "70%",
+                                    height: '80vh', overflowY: 'scroll'
+                                }}
+                            >
+                                <h2>Resultados para {resultConsulta.pacienteNome}</h2>
+                                {resultConsulta.results.map((position) => {
+                                    return (
+                                        <div style={style.waitingListPatient} key={position._id}>
+                                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                                <span>Exame: {position.examName}</span>
+
+                                                {position.type === "image" && (
+                                                    <>
+                                                        <span>Resultado: </span>
+                                                        <img src={`data:${position.fileType};base64,${position.value}`} style={{ width: '150px', heigth: '150px' }} alt="Imagem" />
+                                                    </>
+                                                )}
+
+                                                {position.type === "text" && (
+                                                    <>
+                                                        <span>Resultado: {position.value}</span>
+                                                    </>
+                                                )}
+
+                                                {position.type === "pdf" && (
+                                                    <>
+                                                        <span>Resultado: </span>
+                                                        <iframe
+                                                            src={`data:${position.fileType};base64,${position.value}`}
+                                                            title="PDF Document"
+                                                            width="100%"
+                                                            height="500px"
+                                                            style={{ border: 'none' }}
+                                                        ></iframe>
+                                                    </>
+                                                )}
+
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                <div style={{ display: "flex", alignItems: "center", marginTop: 20 }}>
+                                    <span>Diagnóstico: </span>
+                                    <input
+                                        style={style.input}
+                                        value={diagnostico}
+                                        onChange={(e) => setDiagnostico(e.target.value)} // Update state
+                                        placeholder="Digite os diagnósticos separados por vírgulas"
+                                    />
+                                    <button
+                                        style={style.button}
+                                        onClick={handleUpdateDiagnostico} // Update diagnosis
+                                    >
+                                        Atualizar
+                                    </button>
+                                </div>
+
+                            </div>
                         </div>
-                    );
-                })}
+
+                    )}
+
+                </div>
             </div>
-        </div>
+
+        </div >
     );
 }

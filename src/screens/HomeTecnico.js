@@ -5,16 +5,14 @@ import Patient from "../components/Patient.jsx";
 import Patients from "../components/Patients.jsx";
 import PatientAppointment from "../components/PatientAppointment.jsx";
 import { useState, useEffect } from "react";
-import { useAuth } from '../AuthContext'; // Import your AuthContext
 import axios from 'axios';
 
 export default function Home() {
     const [selectedOption, setSelectedOption] = useState("Painel");
     const [waitingList, setWaitingList] = useState([]); // Will store pending consultations
-    const { state } = useAuth(); // Use authentication context
-    const [patients, setPatients] = useState({}); // State to store patient details
     const [selectedConsulta, setSelectedConsulta] = useState(null); // Store selected consulta
     const [examInputs, setExamInputs] = useState({}); // Store inputs for each exam
+    const [image, setImage] = useState(null);
     let content;
 
     const style = {
@@ -98,7 +96,8 @@ export default function Home() {
             borderColor: "#2DA9B5",
             padding: 10,
             border: "none",
-            cursor: 'pointer'
+            cursor: 'pointer',
+            margin: 10
         },
         waitingListPatient: {
             display: "flex",
@@ -149,11 +148,19 @@ export default function Home() {
 
     const handleFileUpload = (e, examName) => {
         const file = e.target.files[0];
-        setExamInputs((prev) => ({
-            ...prev,
-            [examName]: { ...prev[examName], value: file },
-        }));
+        if (!file) return;
+    
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result.split(",")[1]; // Extract Base64 content
+            setExamInputs((prev) => ({
+                ...prev,
+                [examName]: { ...prev[examName], value: base64String, fileType: file.type },
+            }));
+        };
+        reader.readAsDataURL(file); // Convert file to Base64
     };
+    
 
     const renderExamInput = (examName) => {
         const exam = examInputs[examName];
@@ -191,42 +198,46 @@ export default function Home() {
             const response = await axios.get('http://localhost:5000/api/consultas/pending');
             const pendingConsultations = response.data;
             setWaitingList(pendingConsultations); // Set the pending consultations into the waiting list
-            console.log("Consultas: ", pendingConsultations)
-            // Optionally fetch additional patient data if needed
-            const patientsData = await fetchPatientsData(pendingConsultations);
-            setPatients(patientsData);
-            console.log("Pacientes: ", patientsData)
 
         } catch (error) {
             console.error('Error fetching pending consultations:', error);
         }
     };
 
-    // Function to fetch patient data based on the consultations
-    const fetchPatientsData = async (consultations) => {
-        const patientPromises = consultations.map(consulta =>
-            axios.get(`/api/pacientes/${consulta.pacienteId}`)
-        );
-        const patientResponses = await Promise.all(patientPromises);
-        const patientsData = {};
-        patientResponses.forEach(response => {
-            const patient = response.data;
-            patientsData[patient._id] = patient; // Assuming patient has an _id field
-        });
-        return patientsData;
-    };
-
-    // UseEffect to fetch pending consultations on component mount
     useEffect(() => {
         fetchPendingConsultations();
-    });
+    }, []);
 
     const handleAtenderClick = (consulta) => {
-        alert("HELLO")
         setSelectedConsulta(consulta);
-
     };
 
+    const handleSendAllResults = async () => {
+        try {
+            const results = Object.entries(examInputs).map(([examName, data]) => ({
+                examName, // Name of the exam
+                type: data.type, // Type of input
+                value: data.value, // Base64-encoded data
+                fileType: data.fileType || null, // MIME type of the file
+            }));
+    
+            const payload = { results };
+
+            console.log("Resultados: ",payload);
+    
+            const response = await axios.put(
+                `http://localhost:5000/api/consultas/results/${selectedConsulta._id}`,
+                payload
+            );
+    
+            alert("All results uploaded successfully!");
+            console.log("Response:", response.data);
+        } catch (error) {
+            console.error("Error uploading results:", error.response || error);
+            alert("Failed to upload results.");
+        }
+    };
+    
     // Content rendering based on selected option
     switch (selectedOption) {
         case "Painel":
@@ -252,7 +263,7 @@ export default function Home() {
                     </div>
 
                     {selectedConsulta && (
-                        <div style={{ width: "70%", margin: 10 }}>
+                        <div style={style.rightPane}>
                             <h3>Consulta Selecionada</h3>
                             <p>Médico: {selectedConsulta.medico}</p>
                             <p>Paciente: {selectedConsulta.pacienteNome}</p>
@@ -264,7 +275,7 @@ export default function Home() {
                                         style={style.input}
                                         onChange={(e) => handleExamTypeChange(e, exam)}
                                     >
-                                        <option value="">Selecione o tipo de ficheiro</option>
+                                        <option value="">Selecione o tipo de resultado</option>
                                         <option value="text">Texto</option>
                                         <option value="image">Imagem</option>
                                         <option value="pdf">PDF</option>
@@ -272,6 +283,14 @@ export default function Home() {
                                     {renderExamInput(exam)}
                                 </div>
                             ))}
+
+                            <button
+                                style={style.button}
+                                onClick={() => handleSendAllResults()}
+                                disabled={!Object.values(examInputs).some(input => input?.value)}
+                            >
+                                Enviar 
+                            </button>
                         </div>
                     )}
 
