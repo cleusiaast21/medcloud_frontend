@@ -6,14 +6,16 @@ import Patients from "../components/Patients.jsx";
 import Painel from "../components/Painel.jsx";
 import NovaConsulta from "../components/NovaConsulta.jsx";
 import PatientAppointment from "../components/PatientAppointment.jsx";
+import Estatisticas from "../components/Estatisticas.jsx";
 import { useState } from "react";
+import { useAuth } from '../AuthContext'; // Import your AuthContext
 
 export default function Home() {
 
   const [selectedOption, setSelectedOption] = useState("Painel");
-  let content;
-
   const [showNovaConsulta, setShowNovaConsulta] = useState(true);
+  const { state } = useAuth(); 
+  let content;
 
   const handleCloseNovaConsulta = () => {
     setShowNovaConsulta(false); // This will hide the NovaConsulta component
@@ -134,7 +136,7 @@ export default function Home() {
     case "Estatísticas":
       content = (
 
-        <div>Estatísticas</div>
+        <Estatisticas doctorName={state.user.nomeCompleto}/>
 
       );
       break;

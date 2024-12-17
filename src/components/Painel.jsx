@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
-import pfp from '../assets/userIcon.jpg';
 import {
     appointments,
 } from "../assets/mocks.jsx";
@@ -38,17 +37,6 @@ export default function Painel() {
                 const patientRequests = waitingListData.map(position =>
                     axios.get(`http://localhost:5000/api/pacientes/getPaciente/${position.pacienteId}`)
                 );
-
-                // Fetch consultas with results
-                const results = await axios.get('http://localhost:5000/api/consultas/findExamResults');
-
-                const resultsData = results.data.consultas;
-
-                setUnfinishedConsultas(resultsData);
-
-                console.log("Consultas: ", resultsData)
-
-
                 const patientResponses = await Promise.all(patientRequests);
                 const patientData = patientResponses.reduce((acc, curr) => {
                     const paciente = curr.data;
@@ -57,6 +45,18 @@ export default function Painel() {
                 }, {});
 
                 setPatients(patientData);
+
+                console.log("PatientData is : ",patientData)
+
+                
+                // Fetch consultas with results
+                const results = await axios.get('http://localhost:5000/api/consultas/findExamResults');
+
+                const resultsData = results.data.consultas;
+
+                setUnfinishedConsultas(resultsData);
+
+                console.log("Consultas: ", resultsData)
             } catch (error) {
                 console.error('Error fetching waiting list or patient details:', error);
             }
