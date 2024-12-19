@@ -230,7 +230,8 @@ export default function Home() {
                 payload
             );
     
-            alert("All results uploaded successfully!");
+            alert("Resultados actualizados com sucesso!");
+            setSelectedConsulta(null)
             console.log("Response:", response.data);
         } catch (error) {
             console.error("Error uploading results:", error.response || error);

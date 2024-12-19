@@ -39,8 +39,6 @@ export default function Estatisticas({ doctorName }) {
     }, [doctorName]);
 
     
-
-
     return (
         <div style={{ fontFamily: "Poppins", textAlign: "center", background: "white", borderRadius: 25, padding: 10, margin: 10, height: "80vh" }}>
             {data.length > 0 ? (

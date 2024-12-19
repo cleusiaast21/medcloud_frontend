@@ -7,6 +7,7 @@ import Painel from "../components/Painel.jsx";
 import NovaConsulta from "../components/NovaConsulta.jsx";
 import PatientAppointment from "../components/PatientAppointment.jsx";
 import Estatisticas from "../components/Estatisticas.jsx";
+import Agenda from "../components/Agenda.jsx";
 import { useState } from "react";
 import { useAuth } from '../AuthContext'; // Import your AuthContext
 
@@ -129,7 +130,7 @@ export default function Home() {
     case "Agenda":
       content = (
 
-          <PatientAppointment  />
+          <h1>Agenda</h1>
      
       );
       break;

@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import pfp from '../assets/userIcon.jpg';
-import {
-  patientsList
-} from "../assets/mocks.jsx";
-import {
-  MagnifyingGlass,
-  Microphone
-} from "@phosphor-icons/react";
+import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import axios from 'axios';
+import Modal from 'react-modal';
+
+Modal.setAppElement('#root'); // Evita warnings no console
 
 export default function Patients() {
 
+  const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [filteredDoctors, setFilteredDoctors] = useState([]);
@@ -19,9 +17,37 @@ export default function Patients() {
   const [patients, setPatients] = useState([]); // Add state for patients
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPatients, setFilteredPatients] = useState([]);
+  const [patientAppointments, setPatientAppointments] = useState([]);
+
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+    setSelectedPatient(null);
+  };
+
+  const fetchPatientAppointments = async (patientId) => {
+    try {
+
+      const response = await axios.get(`http://localhost:5000/api/consultas/consultasPaciente/${patientId}`);
+      return response.data; // Retorna as consultas do paciente
+    } catch (error) {
+      console.error("Erro ao buscar consultas do paciente:", error);
+      return [];
+    }
+  };
 
   const handlePatientClick = (patient) => {
     setSelectedPatient(patient);
+
+    // Buscar consultas do paciente
+
+    const appointments = fetchPatientAppointments(patient.numeroIdentificacao);
+    setPatientAppointments(appointments); // Atualiza o estado com as consultas
+
+    console.log("APPOINTMENTS: ",patientAppointments)
+
+    setModalIsOpen(true); // Abre o modal
+
   };
 
 
@@ -90,6 +116,7 @@ export default function Patients() {
 
     return age;
   };
+
 
   const style = {
     container: {
@@ -349,23 +376,53 @@ export default function Patients() {
 
         </div>
 
-        <div
-          style={{
-            marginTop: 30,
-            textAlign: "center",
-            fontFamily: "Poppins",
-            display: "flex",
-            justifyContent: 'right',
-            width: '90%',
-          }}
-        >
-          <button style={pacientes.previousButton}>Anterior</button>
-          <button style={pacientes.numericalButton}>1</button>
-          <button style={pacientes.numericalButton}>2</button>
-          <button style={pacientes.numericalButton}>3</button>
-          <button style={pacientes.numericalButton}>4</button>
-          <button style={pacientes.nextButton}>Próximo</button>
-        </div>
+        {selectedPatient && (
+          <Modal
+            isOpen={modalIsOpen}
+            onRequestClose={closeModal}
+            style={{
+              content: {
+                width: '80%',
+                margin: 'auto',
+                borderRadius: '10px',
+                padding: '20px',
+              },
+            }}
+          >
+            <h2>{selectedPatient.nomeCompleto}</h2>
+            <p><strong>ID:</strong> {selectedPatient.numeroIdentificacao}</p>
+            <p><strong>Idade:</strong> {calculateAge(selectedPatient.dataNascimento)}</p>
+            <p><strong>Gênero:</strong> {selectedPatient.sexo}</p>
+            <p><strong>Contactos:</strong> {selectedPatient.telefonePrincipal}/{selectedPatient.telefoneAlternativo}</p>
+            <p><strong>Email:</strong> {selectedPatient.email}</p>
+
+            <h3>Consultas</h3>
+            {patientAppointments.length > 0 ? (
+              <ul>
+                {patientAppointments.map((appointment, index) => (
+                  <li key={index}>
+                    <strong>Data:</strong> {appointment.pacienteId} | <strong>Descrição:</strong> {appointment.medico}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Nenhuma consulta encontrada.</p>
+            )}
+            <button
+              onClick={closeModal}
+              style={{
+                backgroundColor: '#2DA9B5',
+                color: '#fff',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+              }}
+            >
+              Fechar
+            </button>
+          </Modal>
+        )}
       </div>
     </div>
 

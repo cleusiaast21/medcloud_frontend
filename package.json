@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@fontsource/poppins": "^5.0.14",
+    "@mobiscroll/react-lite": "^4.10.9",
     "@phosphor-icons/react": "^2.1.7",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -13,6 +15,7 @@
     "chart.js": "^4.4.7",
     "frontend": "file:",
     "react": "^18.3.1",
+    "react-big-calendar": "^1.17.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
     "react-modal": "^3.16.1",

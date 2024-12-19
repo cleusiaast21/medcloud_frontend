@@ -46,9 +46,9 @@ export default function Painel() {
 
                 setPatients(patientData);
 
-                console.log("PatientData is : ",patientData)
+                console.log("PatientData is : ", patientData)
 
-                
+
                 // Fetch consultas with results
                 const results = await axios.get('http://localhost:5000/api/consultas/findExamResults');
 
@@ -198,8 +198,9 @@ export default function Painel() {
                 acceptedDiseases,
             })
             .then((response) => {
-                console.log("Diagnóstico atualizado com sucesso:", response.data);
-                // Optionally close the modal or provide feedback
+
+                setShowModal(false)
+                alert("Diagnóstico atualizado com sucesso:", response.data);
             })
             .catch((error) => {
                 console.error("Erro ao atualizar diagnóstico:", error);
@@ -240,7 +241,6 @@ export default function Painel() {
             </div>
 
             <div style={{ width: "30%" }}>
-
 
                 <div style={style.waitingListContainer}>
                     <p style={{ marginLeft: 40 }}>Lista de Espera</p>
@@ -302,7 +302,25 @@ export default function Painel() {
                                     height: '80vh', overflowY: 'scroll'
                                 }}
                             >
-                                <h2>Resultados para {resultConsulta.pacienteNome}</h2>
+
+                                <div style={{
+                                    display: 'flex', width: '100%', justifyContent: 'space-between'}}>
+                                    <h2>Resultados para {resultConsulta.pacienteNome}</h2>
+                                    <button
+                                        onClick={() => setShowModal(false)}
+                                        style={{
+                                            backgroundColor: "transparent",
+                                            border: "none",
+                                            color: "red",
+                                            fontSize: "18px",
+                                            cursor: "pointer",
+                                        }}
+                                        aria-label="Close"
+                                    >
+                                        &times;
+                                    </button>
+                                </div>
+
                                 {resultConsulta.results.map((position) => {
                                     return (
                                         <div style={style.waitingListPatient} key={position._id}>
@@ -312,7 +330,7 @@ export default function Painel() {
                                                 {position.type === "image" && (
                                                     <>
                                                         <span>Resultado: </span>
-                                                        <img src={`data:${position.fileType};base64,${position.value}`} style={{ width: '150px', heigth: '150px' }} alt="Imagem" />
+                                                        <img src={`data:${position.fileType};base64,${position.value}`} style={{ width: '200px', heigth: '200px' }} alt="Imagem" />
                                                     </>
                                                 )}
 
