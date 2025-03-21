@@ -6,7 +6,7 @@ import HomeTecnico from './screens/HomeTecnico';
 import Register from './screens/Register';
 import Employee from './screens/EmployeeRegistration';
 import Error from './screens/AccessDenied.js';
-import ModelTest from './screens/ModelTest.js';
+import HomeR from './screens/HomeR.jsx';
 import { AuthProvider } from './AuthContext';
 import { useAuth } from './AuthContext.js';
 
@@ -52,6 +52,19 @@ export default function App() {
     return <Login />;
   };
 
+  const RecepcionistaPage = () => {
+    const { state } = useAuth();
+
+    if (state.isAuthenticated) {
+
+      if (state.user.employeeType === 'Recepcionista') {
+        return <HomeR />;
+      } else
+        return <Error />;
+    }
+    return <Login />;
+  };
+
   return (
     <AuthProvider>
       <Router>
@@ -64,8 +77,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/employeeregistration" element={<Employee />} />
-          <Route path="/model" element={<ModelTest />} />
-          </Routes>
+          <Route path="/homeR" element={<RecepcionistaPage />} />
+        </Routes>
 
       </Router>
     </AuthProvider>

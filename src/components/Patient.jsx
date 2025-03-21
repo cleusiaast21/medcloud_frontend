@@ -1,11 +1,9 @@
 import React from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import {
-    MagnifyingGlass,
     X,
     NotePencil,
     CaretDown,
-    ListMagnifyingGlass,
   } from "@phosphor-icons/react";
   import {
     paciente,

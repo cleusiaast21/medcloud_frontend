@@ -1,15 +1,8 @@
-import { Calendar, momentLocalizer } from 'react-big-calendar'
-import moment from 'moment'
+import React from 'react';
 
-const localizer = momentLocalizer(moment)
-
-const MyCalendar = (props) => (
+export default function Agenda() {
   <div>
-    <Calendar
-      localizer={localizer}
-      startAccessor="start"
-      endAccessor="end"
-      style={{ height: 500 }}
-    />
+    Agenda
   </div>
-)
+
+}

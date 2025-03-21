@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { House, HandHeart, Calendar, ChartLine, ArrowRight } from "@phosphor-icons/react";
+import { House, HandHeart, Calendar, ChartLine } from "@phosphor-icons/react";
 import "@fontsource/poppins"; // Defaults to weight 400
 import logo from '../assets/logo.png';
 import consulta from '../assets/consulta.png';

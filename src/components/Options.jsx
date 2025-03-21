@@ -3,9 +3,11 @@ import { House, HandHeart, Calendar, ChartLine, ArrowRight } from "@phosphor-ico
 import "@fontsource/poppins"; // Defaults to weight 400
 import logo from '../assets/logo.png';
 import consulta from '../assets/consulta.png';
+import { useAuth } from '../AuthContext'; // Import your AuthContext
 
 export default function Options({ onOptionSelect, selectedOption: initialSelectedOption }) {
 
+    const { state } = useAuth();
     const [selectedOption, setSelectedOption] = useState('Painel'); // 'Painel' é selecionado por padrão
 
     useEffect(() => {
@@ -136,13 +138,17 @@ export default function Options({ onOptionSelect, selectedOption: initialSelecte
                     </div>
                 ))}
 
-                <div style={style.novaConsulta} onClick={() => handleOptionSelect("Nova Consulta")}>
 
-                    <span style={style.novaConsultaText}>Nova </span>
-                    <span style={style.novaConsultaText}>consulta</span>
-                    <ArrowRight size={20} color='#2DA9B5' weight='bold' style={{ paddingLeft: 5 }} />
+                {(state.user.employeeType === "Recepcionista") && (
+                    <div style={style.novaConsulta} onClick={() => handleOptionSelect("Nova Consulta")}>
 
-                </div>
+                        <span style={style.novaConsultaText}>Nova </span>
+                        <span style={style.novaConsultaText}>consulta</span>
+                        <ArrowRight size={20} color='#2DA9B5' weight='bold' style={{ paddingLeft: 5 }} />
+
+                    </div>
+                )}
+
 
             </div>
 

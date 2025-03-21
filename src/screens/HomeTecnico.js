@@ -12,7 +12,6 @@ export default function Home() {
     const [waitingList, setWaitingList] = useState([]); // Will store pending consultations
     const [selectedConsulta, setSelectedConsulta] = useState(null); // Store selected consulta
     const [examInputs, setExamInputs] = useState({}); // Store inputs for each exam
-    const [image, setImage] = useState(null);
     let content;
 
     const style = {

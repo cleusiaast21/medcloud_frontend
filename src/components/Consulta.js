@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
 import Select from 'react-select';
 import { symptomOptions } from '../assets/auxiliaryData.jsx';
+import {
+    Microphone,
+} from "@phosphor-icons/react";
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+if (recognition) {
+    recognition.lang = 'pt-BR'; // Define o idioma do reconhecimento de voz para português do Brasil
+}
 
 export default function Consulta({
     subjectiveText,
@@ -15,14 +25,74 @@ export default function Consulta({
     paciente
 }) {
 
-
     const [consultationHistory, setConsultationHistory] = useState([]);
     const [showHistory, setShowHistory] = useState(false);
     const [isNewConsulta, setIsNewConsulta] = useState(true); // New state to track 'Nova Consulta'
 
+    const [isListening, setIsListening] = useState(false);
+    const [examesRealizados, setExamesRealizados] = useState([]);
+    const [transcript, setTranscript] = useState('');
+    const sintomas = ['dor de cabeça', 'dor de garganta', 'insônia', 'febre', 'vômitos', 'diarreia', 'tremores', 'tontura', 'cansaço', 'falta de apetite', 'perda de apetite', 'dores musculares', 'halucinações', 'enxaqueca', 'gripe', 'tosse', 'escarro'];
+    const [recognizedSintomas, setRecognizedSintomas] = useState([]); // Novo estado para sintomas reconhecidos
+    const [microphoneColor, setMicrophoneColor] = useState("#000");
+
+
+
+    // Objeto para armazenar os sintomas com 1 para presente e 0 para ausente
+    const sintomasObj = sintomas.reduce((acc, sintoma) => {
+        acc[sintoma] = recognizedSintomas.includes(sintoma) ? 1 : 0;
+        return acc;
+    }, {});
+
+
+
+    useEffect(() => {
+        if (recognition) {
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.onresult = (event) => {
+                const transcriptAtual = Array.from(event.results)
+                    .map(result => result[0])
+                    .map(result => result.transcript)
+                    .join('');
+
+                setTranscript(transcriptAtual);
+
+                // Verifica o transcriptAtual por sintomas
+                const sintomasReconhecidos = sintomas.filter(sintoma =>
+                    transcriptAtual.toLowerCase().includes(sintoma)
+                );
+
+                // Atualiza o estado apenas se novos sintomas forem reconhecidos
+                if (sintomasReconhecidos.length > 0) {
+                    setRecognizedSintomas(sintomasReconhecidos);
+                }
+            };
+            recognition.onend = () => {
+                setIsListening(false);
+            };
+        }
+    }, [recognition]);
+
+    const toggleListen = () => {
+        if (isListening) {
+            recognition.stop();
+            setIsListening(false);
+            setMicrophoneColor("black"); // Volta para a cor padrão quando não está ouvindo
+
+        } else {
+            recognition.start();
+            setIsListening(true);
+            setMicrophoneColor("red"); // Volta para a cor padrão quando não está ouvindo
+
+        }
+    };
+
     const handleSelectChange = (selectedOptions) => {
         const symptoms = selectedOptions.map(option => option.value);
-        onSymptomsChange(symptoms); // Call parent handler with symptoms array
+        onSymptomsChange([...selectedSymptoms, ...recognizedSintomas]); // Call parent handler with symptoms array
+        setRecognizedSintomas([]); // Clear after adding
+
     };
 
     const fetchConsultationHistory = async () => {
@@ -129,6 +199,26 @@ export default function Consulta({
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
                             <label htmlFor="subjective">Subjectivo</label>
                             <textarea id="subjective" style={{ resize: "none", width: "85%", border: "0.5px solid rgba(80,80,80,0.2)", borderRadius: 5 }} value={subjectiveText} onChange={(e) => onSubjectiveChange(e.target.value)} />
+                        </div>
+
+                        <div>
+                            <div><Microphone
+                                style={{ cursor: 'pointer', color: microphoneColor }}
+                                size={25}
+                                onClick={toggleListen} />
+                                <span>Transcrição: {transcript}</span>
+                            </div>
+                            <span>Sintomas Reconhecidos: {recognizedSintomas.join(', ')}</span>
+                            <button style={{
+                                background:"#2DA9B5",
+                                padding: 5,
+                                border:'none',
+                                borderRadius: 10,
+                                color: "white",
+                                fontFamily: "Poppins",
+                                fontWeight: 600,
+                                cursor: 'pointer'
+                            }}>Aceitar sintomas</button>
                         </div>
 
                         <div style={{ display: "flex", justifyContent: "space-between" }}>

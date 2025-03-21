@@ -9,7 +9,7 @@ import Estatisticas from "../components/Estatisticas.jsx";
 import { useState } from "react";
 import { useAuth } from '../AuthContext'; // Import your AuthContext
 
-export default function Home() {
+export default function HomeR() {
 
   const [selectedOption, setSelectedOption] = useState("Painel");
   const [showNovaConsulta, setShowNovaConsulta] = useState(true);

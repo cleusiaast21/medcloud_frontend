@@ -1,24 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import "@fontsource/poppins"; // Defaults to weight 400
-import pfp from '../assets/userIcon.jpg';
+import pfp from "../assets/userIcon.jpg";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
-import axios from 'axios';
-import Modal from 'react-modal';
+import axios from "axios";
+import Modal from "react-modal";
 
-Modal.setAppElement('#root'); // Evita warnings no console
+Modal.setAppElement("#root"); // Evita warnings no console
 
 export default function Patients() {
-
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [filteredDoctors, setFilteredDoctors] = useState([]);
-  const [specialty, setSpecialty] = useState('');
+  const [specialty, setSpecialty] = useState("");
   const [patients, setPatients] = useState([]); // Add state for patients
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [patientAppointments, setPatientAppointments] = useState([]);
-
 
   const closeModal = () => {
     setModalIsOpen(false);
@@ -27,8 +25,9 @@ export default function Patients() {
 
   const fetchPatientAppointments = async (patientId) => {
     try {
-
-      const response = await axios.get(`http://localhost:5000/api/consultas/consultasPaciente/${patientId}`);
+      const response = await axios.get(
+        `http://localhost:5000/api/consultas/consultasPaciente/${patientId}`
+      );
       return response.data; // Retorna as consultas do paciente
     } catch (error) {
       console.error("Erro ao buscar consultas do paciente:", error);
@@ -39,26 +38,26 @@ export default function Patients() {
   const handlePatientClick = (patient) => {
     setSelectedPatient(patient);
 
-    // Buscar consultas do paciente
-
-    const appointments = fetchPatientAppointments(patient.numeroIdentificacao);
-    setPatientAppointments(appointments); // Atualiza o estado com as consultas
-
-    console.log("APPOINTMENTS: ",patientAppointments)
-
-    setModalIsOpen(true); // Abre o modal
-
+    fetchPatientAppointments(patient.numeroIdentificacao)
+      .then((appointments) => {
+        setPatientAppointments(appointments); // Atualiza o estado com as consultas
+        setModalIsOpen(true); // Abre o modal
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar consultas do paciente:", error);
+      });
   };
-
 
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/pacientes/patients');
+        const response = await axios.get(
+          "http://localhost:5000/api/pacientes/patients"
+        );
         setPatients(response.data);
         setFilteredPatients(response.data); // Inicialmente exibe todos os pacientes
       } catch (error) {
-        console.error('Error fetching patients:', error);
+        console.error("Error fetching patients:", error);
       }
     };
 
@@ -69,9 +68,10 @@ export default function Patients() {
     const value = e.target.value;
     setSearchTerm(value);
 
-    const filtered = patients.filter(patient =>
-      patient.nomeCompleto.toLowerCase().includes(value.toLowerCase()) ||
-      patient.numeroIdentificacao.toString().includes(value)
+    const filtered = patients.filter(
+      (patient) =>
+        patient.nomeCompleto.toLowerCase().includes(value.toLowerCase()) ||
+        patient.numeroIdentificacao.toString().includes(value)
     );
 
     setFilteredPatients(filtered);
@@ -80,20 +80,23 @@ export default function Patients() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/employees/doctors');
+        const response = await axios.get(
+          "http://localhost:5000/api/employees/doctors"
+        );
         setDoctors(response.data);
       } catch (error) {
-        console.error('Error fetching doctors:', error);
+        console.error("Error fetching doctors:", error);
       }
     };
 
     fetchDoctors();
   }, []);
 
-
   useEffect(() => {
     if (specialty) {
-      const filtered = doctors.filter(doctor => doctor.specialty === specialty);
+      const filtered = doctors.filter(
+        (doctor) => doctor.specialty === specialty
+      );
       setFilteredDoctors(filtered);
     } else {
       setFilteredDoctors([]);
@@ -110,13 +113,23 @@ export default function Patients() {
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDifference = today.getMonth() - birthDate.getMonth();
 
-    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
 
     return age;
   };
 
+  const isBase64 = (str) => {
+    try {
+      return btoa(atob(str)) === str;
+    } catch (err) {
+      return false;
+    }
+  };
 
   const style = {
     container: {
@@ -209,49 +222,16 @@ export default function Patients() {
     },
   };
 
-  const pacientes = {
-    tableTitle: {
-      color: "#2DA9B5",
-      fontWeight: "Normal",
-      fontSize: 12,
-    },
-    previousButton: {
-      marginRight: 10,
-      padding: "5px 10px",
-      border: "none",
-      borderRadius: 5,
-      backgroundColor: "#fff",
-      color: "#c4c4c4",
-      fontFamily: "Poppins",
-      cursor: "pointer",
-    },
-    nextButton: {
-      marginLeft: 10,
-      padding: "5px 10px",
-      border: "none",
-      borderRadius: 5,
-      backgroundColor: "#fff",
-      color: "#2DA9B5",
-      fontFamily: "Poppins",
-      cursor: "pointer",
-    },
-    numericalButton: {
-      margin: "0 10px",
-      padding: "5px 10px",
-      border: "none",
-      borderRadius: 5,
-      backgroundColor: "#2DA9B5",
-      color: "white",
-      fontFamily: "Poppins",
-      cursor: "pointer",
-    },
-  };
-
   return (
-
-    <div >
-
-      <div style={{ display: "flex", justifyContent: "space-between", flexDirection: 'row', alignItems: 'center' }}>
+    <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
         <div
           style={{
             display: "flex",
@@ -309,16 +289,21 @@ export default function Patients() {
           >
             <option value="">Selecione o médico</option>
             {filteredDoctors.map((doctor) => (
-              <option key={doctor._id} value={doctor.nomeCompleto}>{doctor.nomeCompleto}</option>
+              <option key={doctor._id} value={doctor.nomeCompleto}>
+                {doctor.nomeCompleto}
+              </option>
             ))}
           </select>
         </div>
-
-
       </div>
 
-
-      <div style={{ display: "flex", justifyContent: "center", flexDirection: 'column' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexDirection: "column",
+        }}
+      >
         <div
           style={{
             background: "white",
@@ -326,9 +311,9 @@ export default function Patients() {
             borderRadius: 10,
             height: "65vh",
             display: "flex",
-            margin: 'auto',
+            margin: "auto",
             marginTop: 15,
-            overflowY: 'scroll'
+            overflowY: "scroll",
           }}
         >
           <table
@@ -351,7 +336,11 @@ export default function Patients() {
             </thead>
             <tbody>
               {filteredPatients.map((patient, index) => (
-                <tr key={index} onClick={() => handlePatientClick(patient)} style={{ cursor: "pointer" }}>
+                <tr
+                  key={index}
+                  onClick={() => handlePatientClick(patient)}
+                  style={{ cursor: "pointer" }}
+                >
                   <td style={style.tableContentSpecial}>
                     <img
                       src={pfp}
@@ -364,16 +353,21 @@ export default function Patients() {
                     />
                     {patient.nomeCompleto}
                   </td>
-                  <td style={style.tableContent}>{patient.numeroIdentificacao}</td>
-                  <td style={style.tableContent}>{calculateAge(patient.dataNascimento)}</td>
+                  <td style={style.tableContent}>
+                    {patient.numeroIdentificacao}
+                  </td>
+                  <td style={style.tableContent}>
+                    {calculateAge(patient.dataNascimento)}
+                  </td>
                   <td style={style.tableContent}>{patient.sexo}</td>
-                  <td style={style.tableContent}>{patient.telefonePrincipal}/{patient.telefoneAlternativo}</td>
+                  <td style={style.tableContent}>
+                    {patient.telefonePrincipal}/{patient.telefoneAlternativo}
+                  </td>
                   <td style={style.tableContent}>{patient.email}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-
         </div>
 
         {selectedPatient && (
@@ -382,41 +376,195 @@ export default function Patients() {
             onRequestClose={closeModal}
             style={{
               content: {
-                width: '80%',
-                margin: 'auto',
-                borderRadius: '10px',
-                padding: '20px',
+                width: "80%",
+                maxHeight: "90vh",
+                overflowY: "auto",
+                margin: "auto",
+                borderRadius: "15px",
+                padding: "30px",
+                backgroundColor: "#f9f9f9",
+                boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
+                fontFamily: "Arial, sans-serif",
               },
             }}
           >
-            <h2>{selectedPatient.nomeCompleto}</h2>
-            <p><strong>ID:</strong> {selectedPatient.numeroIdentificacao}</p>
-            <p><strong>Idade:</strong> {calculateAge(selectedPatient.dataNascimento)}</p>
-            <p><strong>Gênero:</strong> {selectedPatient.sexo}</p>
-            <p><strong>Contactos:</strong> {selectedPatient.telefonePrincipal}/{selectedPatient.telefoneAlternativo}</p>
-            <p><strong>Email:</strong> {selectedPatient.email}</p>
+            <h2
+              style={{
+                color: "#2D728F",
+                borderBottom: "2px solid #2DA9B5",
+                paddingBottom: "10px",
+              }}
+            >
+              {selectedPatient.nomeCompleto}
+            </h2>
+            <div style={{ marginBottom: "20px" }}>
+              <p>
+                <strong>ID:</strong> {selectedPatient.numeroIdentificacao}
+              </p>
+              <p>
+                <strong>Idade:</strong>{" "}
+                {calculateAge(selectedPatient.dataNascimento)}
+              </p>
+              <p>
+                <strong>Gênero:</strong> {selectedPatient.sexo}
+              </p>
+              <p>
+                <strong>Contactos:</strong> {selectedPatient.telefonePrincipal}/
+                {selectedPatient.telefoneAlternativo}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedPatient.email}
+              </p>
+            </div>
 
-            <h3>Consultas</h3>
+            <h3
+              style={{
+                color: "#2D728F",
+                borderBottom: "2px solid #2DA9B5",
+                paddingBottom: "5px",
+              }}
+            >
+              Consultas
+            </h3>
             {patientAppointments.length > 0 ? (
-              <ul>
+              <ul style={{ listStyleType: "none", padding: 0 }}>
                 {patientAppointments.map((appointment, index) => (
-                  <li key={index}>
-                    <strong>Data:</strong> {appointment.pacienteId} | <strong>Descrição:</strong> {appointment.medico}
+                  <li
+                    key={index}
+                    style={{
+                      marginBottom: "20px",
+                      padding: "15px",
+                      backgroundColor: "#fff",
+                      borderRadius: "10px",
+                      boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    <p>
+                      <strong>Especialidade:</strong> {appointment.specialty}
+                    </p>
+                    <p>
+                      <strong>Médico:</strong> {appointment.medico}
+                    </p>
+                    <p>
+                      <strong>Estado:</strong> {appointment.state}
+                    </p>
+                    <p>
+                      <strong>Doenças Aceitas:</strong>{" "}
+                      {appointment.acceptedDiseases.join(", ")}
+                    </p>
+                    <p>
+                      <strong>Sintomas Selecionados:</strong>{" "}
+                      {appointment.consultaData.selectedSymptoms.join(", ")}
+                    </p>
+                    <p>
+                      <strong>Exames Selecionados:</strong>{" "}
+                      {appointment.selectedExams.join(", ")}
+                    </p>
+                    <div>
+                      <strong>Resultados:</strong>
+                      <ul style={{ listStyleType: "disc", marginLeft: "20px" }}>
+                        {appointment.results.map((result, i) => (
+                          <li key={i} style={{ marginBottom: "10px" }}>
+                            <strong>Exame:</strong> {result.examName}
+                            <div style={{ marginTop: "10px" }}>
+                              {result.type === "image" && (
+                                <img
+                                  src={`data:image/png;base64,${result.value}`}
+                                  alt={`Exame: ${result.examName}`}
+                                  style={{
+                                    maxWidth: "100%",
+                                    maxHeight: "300px",
+                                    borderRadius: "8px",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+                                  }}
+                                />
+                              )}
+                              {result.type === "pdf" && (
+                                <div style={{ marginTop: "10px", border: "1px solid #ddd", borderRadius: "8px", overflow: "hidden" }}>
+                                  <iframe
+                                    src={`data:application/pdf;base64,${result.value}`}
+                                    style={{
+                                      width: "80%",
+                                      height: "600px",
+                                      border: "none",
+                                    }}
+                                    title={`${result.examName} PDF`}
+                                  ></iframe>
+                                </div>
+                              )}
+                              {result.type === "text" && (
+                                <div
+                                  style={{
+                                    backgroundColor: "#f4f4f4",
+                                    padding: "15px",
+                                    borderRadius: "8px",
+                                    fontFamily: "monospace",
+                                    whiteSpace: "pre-wrap",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+                                  }}
+                                >
+                                  {isBase64(result.value)
+                                    ? atob(result.value)
+                                    : result.value}
+                                </div>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <strong>Comentários:</strong>
+                      <ul
+                        style={{ listStyleType: "circle", marginLeft: "20px" }}
+                      >
+                        <li>
+                          <strong>Doenças:</strong>{" "}
+                          {appointment.comments.doencas}
+                        </li>
+                        <li>
+                          <strong>Alergias:</strong>{" "}
+                          {appointment.comments.alergias}
+                        </li>
+                        <li>
+                          <strong>Cirurgias:</strong>{" "}
+                          {appointment.comments.cirurgias}
+                        </li>
+                        <li>
+                          <strong>Internamentos:</strong>{" "}
+                          {appointment.comments.internamentos}
+                        </li>
+                        <li>
+                          <strong>Medicação:</strong>{" "}
+                          {appointment.comments.medicacao}
+                        </li>
+                        <li>
+                          <strong>Antecedentes:</strong>{" "}
+                          {appointment.comments.antecedentes}
+                        </li>
+                      </ul>
+                    </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p>Nenhuma consulta encontrada.</p>
+              <p style={{ color: "#666", fontStyle: "italic" }}>
+                Nenhuma consulta encontrada.
+              </p>
             )}
+
             <button
               onClick={closeModal}
               style={{
-                backgroundColor: '#2DA9B5',
-                color: '#fff',
-                border: 'none',
-                padding: '10px 20px',
-                borderRadius: '5px',
-                cursor: 'pointer',
+                backgroundColor: "#2DA9B5",
+                color: "#fff",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontSize: "16px",
+                marginTop: "20px",
+                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
               }}
             >
               Fechar
@@ -425,6 +573,5 @@ export default function Patients() {
         )}
       </div>
     </div>
-
   );
 }

@@ -65,12 +65,19 @@ export const categories = {
     Bioquimicas: [
         'Glicemia em Jejum', 'Ureia', 'Colesterol Total', 'Amilase', 'F. Alcalina',
         'Ácido Úrico', 'Triglicerídeos', 'HDL Colesterol', 'Proteína C Reativa', 'CK-MB',
-         'LDL Colesterol', 'GOT/AST', 'Bilirrubina Total', 'Bilirrubina Directa', 'GGT'
+        'LDL Colesterol', 'GOT/AST', 'Bilirrubina Total', 'Bilirrubina Directa', 'GGT','Ferro',
+        'Ferritina'
     ],
     Urina: [
         'Urina 2 (sumária)', 'Teste de Gravidez'
     ],
     Hematologia: [
-        'Amilase', 'F. Alcalina', 'Proteína C Reativa', 'CK-MB', 'GOT/AST', 'GGT'
-    ]
+        'Eritrograma', 'Leucograma', 'Trombocitograma', 'GGT'
+    ],
+    Imunologia: [
+        'Reação de Widal'
+    ],
+    Microbiologia: [
+        'Pesquisa de Plasmodium','Pesquisa de Dengue'
+    ],
 };

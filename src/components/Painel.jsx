@@ -1,9 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import "@fontsource/poppins"; // Defaults to weight 400
-import {
-    appointments,
-} from "../assets/mocks.jsx";
 import axios from 'axios';
 import { useAuth } from '../AuthContext'; // Import your AuthContext
 import PatientAppointment from './PatientAppointment.jsx';
@@ -50,7 +47,11 @@ export default function Painel() {
 
 
                 // Fetch consultas with results
-                const results = await axios.get('http://localhost:5000/api/consultas/findExamResults');
+                const results = await axios.get(`http://localhost:5000/api/consultas/findExamResults`, {
+                    params: {
+                      medicoNomeCompleto: state.user.nomeCompleto
+                    }
+                  });
 
                 const resultsData = results.data.consultas;
 
@@ -213,31 +214,7 @@ export default function Painel() {
             <div style={style.appointmentsContainer}>
                 <p>Marcações para Hoje</p>
 
-                <table
-                    style={{
-                        width: "95%",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        borderCollapse: "collapse",
-                    }}
-                >
-                    <thead>
-                        <tr style={style.tableTitles}>
-                            <th style={style.tableTitle}>Hora</th>
-                            <th style={style.tableTitle}>Data</th>
-                            <th style={style.tableTitle}>Paciente</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {appointments.map((appointment, index) => (
-                            <tr key={index}>
-                                <td style={style.tableContent}>{appointment.hora}</td>
-                                <td style={style.tableContent}>{appointment.data}</td>
-                                <td style={style.tableContent}>{appointment.patient}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                
             </div>
 
             <div style={{ width: "30%" }}>
@@ -302,7 +279,6 @@ export default function Painel() {
                                     height: '80vh', overflowY: 'scroll'
                                 }}
                             >
-
                                 <div style={{
                                     display: 'flex', width: '100%', justifyContent: 'space-between'}}>
                                     <h2>Resultados para {resultConsulta.pacienteNome}</h2>

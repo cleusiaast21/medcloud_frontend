@@ -2,7 +2,7 @@ import pfp from "../assets/userIcon.jpg";
 import pfp1 from "../assets/pfp1.webp";
 
 const medicamentos = [
-
+/*
   {
     data: new Date().getFullYear,
     medicamento: 'Coartem',
@@ -14,7 +14,7 @@ const medicamentos = [
     medicamento: 'Clavamox',
     quantidade: '500mg',
     intervalo: '12h',
-  }
+  }*/
 ]
 
 const prescriptions = [
