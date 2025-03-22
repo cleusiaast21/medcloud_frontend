@@ -16,15 +16,7 @@ export default function App() {
 
   const AdmPage = () => {
     const { state } = useAuth();
-
-    if (state.isAuthenticated) {
-
-      if (state.user.employeeType === 'Administrador') {
         return <Employee />;
-      } else
-        return <Error />;
-    }
-    return <Login />;
   };
 
   const MedicoPage = () => {
@@ -92,7 +84,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/employeeregistration" element={<Employee />} />
           <Route path="/homeR" element={<RecepcionistaPage />} />
-          <Route path="/homeEnfermeiro" element={<HomeEnfermeiro />} />
+          <Route path="/homeEnfermeiro" element={<EnfermeiroPage />} />
         </Routes>
 
       </Router>

@@ -74,7 +74,7 @@ const EmployeeRegistration = () => {
 
         try {
             await axios.post('http://localhost:5000/api/employees', formData);
-            setModalMessage('Consulta registrada com sucesso!');
+            setModalMessage('Funcionário registrado com sucesso!');
             setIsModalOpen(true);
 
             setTimeout(() => {
