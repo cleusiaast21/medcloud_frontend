@@ -30,7 +30,6 @@ export default function Consulta({
     const [isNewConsulta, setIsNewConsulta] = useState(true); // New state to track 'Nova Consulta'
 
     const [isListening, setIsListening] = useState(false);
-    const [examesRealizados, setExamesRealizados] = useState([]);
     const [transcript, setTranscript] = useState('');
     const sintomas = ['dor de cabeça', 'dor de garganta', 'insônia', 'febre', 'vômitos', 'diarreia', 'tremores', 'tontura', 'cansaço', 'falta de apetite', 'perda de apetite', 'dores musculares', 'halucinações', 'enxaqueca', 'gripe', 'tosse', 'escarro'];
     const [recognizedSintomas, setRecognizedSintomas] = useState([]); // Novo estado para sintomas reconhecidos

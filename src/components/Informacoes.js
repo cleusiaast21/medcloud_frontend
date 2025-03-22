@@ -138,7 +138,7 @@ const Informacoes = forwardRef((props, ref) => {
                                 <div>
                                     <label style={patient.attribute}>Frequência Cardíaca: </label>
                                     <input
-                                        type="text"
+                                        type="number"
                                         value={vitals.heartRate}
                                         style={patient.input}
                                         onChange={(e) => handleChange(e, 'vitals', 'heartRate')}
@@ -146,7 +146,7 @@ const Informacoes = forwardRef((props, ref) => {
                                     <br />
                                     <label style={patient.attribute}>Frequência Respiratória: </label>
                                     <input
-                                        type="text"
+                                        type="number" 
                                         style={patient.input}
                                         value={vitals.respiratoryRate}
                                         onChange={(e) => handleChange(e, 'vitals', 'respiratoryRate')}
@@ -162,7 +162,7 @@ const Informacoes = forwardRef((props, ref) => {
                                     <br />
                                     <label style={patient.attribute}>Temperatura: </label>
                                     <input
-                                        type="text"
+                                        type="number" step="any"
                                         value={vitals.temperature}
                                         style={patient.input}
                                         onChange={(e) => handleChange(e, 'vitals', 'temperature')}
@@ -170,7 +170,7 @@ const Informacoes = forwardRef((props, ref) => {
                                     <br />
                                     <label style={patient.attribute}>Peso: </label>
                                     <input
-                                        type="text"
+                                        type="number" step="any"
                                         value={vitals.weight}
                                         style={patient.input}
                                         onChange={(e) => handleChange(e, 'vitals', 'weight')}
@@ -207,7 +207,6 @@ const Informacoes = forwardRef((props, ref) => {
                         <div style={patient.headerContent}>
                             <span style={patient.headerText}>Anamnese</span>
                             <div>
-                                <NotePencil size={25} color="#2DA9B5" onClick={() => handleEditToggle('anamnese')} style={{ cursor: 'pointer' }} />
                                 <CaretDown size={25} color="#2DA9B5" onClick={() => handleVisibilityToggle('anamnese')} style={{ cursor: 'pointer' }} />
                             </div>
                         </div>

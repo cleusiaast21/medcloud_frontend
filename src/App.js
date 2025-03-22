@@ -7,6 +7,7 @@ import Register from './screens/Register';
 import Employee from './screens/EmployeeRegistration';
 import Error from './screens/AccessDenied.js';
 import HomeR from './screens/HomeR.jsx';
+import HomeEnfermeiro from './screens/HomeEnfermeiro.jsx';
 import { AuthProvider } from './AuthContext';
 import { useAuth } from './AuthContext.js';
 
@@ -65,6 +66,19 @@ export default function App() {
     return <Login />;
   };
 
+  const EnfermeiroPage = () => {
+    const { state } = useAuth();
+
+    if (state.isAuthenticated) {
+
+      if (state.user.employeeType === 'Enfermeiro') {
+        return <HomeEnfermeiro />;
+      } else
+        return <Error />;
+    }
+    return <Login />;
+  };
+
   return (
     <AuthProvider>
       <Router>
@@ -78,6 +92,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/employeeregistration" element={<Employee />} />
           <Route path="/homeR" element={<RecepcionistaPage />} />
+          <Route path="/homeEnfermeiro" element={<HomeEnfermeiro />} />
         </Routes>
 
       </Router>

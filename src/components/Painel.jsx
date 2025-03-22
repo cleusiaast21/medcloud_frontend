@@ -12,6 +12,7 @@ export default function Painel() {
     const funcionarioId = state.user.funcionarioId;
     const [patients, setPatients] = useState({}); // State to store patient details
     const [selectedPatient, setSelectedPatient] = useState(null); // State for selected patient
+    const [pacienteInfo, setpacienteInfo] = useState(null); // State for selected patient
     const [showModal, setShowModal] = useState(false);
     const [resultConsulta, setResultConsulta] = useState({})
     const [diagnostico, setDiagnostico] = useState("");
@@ -43,9 +44,6 @@ export default function Painel() {
 
                 setPatients(patientData);
 
-                console.log("PatientData is : ", patientData)
-
-
                 // Fetch consultas with results
                 const results = await axios.get(`http://localhost:5000/api/consultas/findExamResults`, {
                     params: {
@@ -68,6 +66,7 @@ export default function Painel() {
 
     const handleAtenderClick = (pacienteId) => {
         setSelectedPatient(patients[pacienteId]);
+        setpacienteInfo(pacienteId)
     };
 
     const [showPatientAppointment, setShowPatientAppointment] = useState(true);

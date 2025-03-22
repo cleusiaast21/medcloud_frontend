@@ -6,15 +6,16 @@ import {
 import axios from 'axios';
 import Receita from './Receita.js';
 import Procedimentos from './Procedimentos.js';
-import Informacoes from './Informacoes.js';
+import InformacoesMedico from './InformacoesMedico.jsx';
 import Consulta from './Consulta.js';
 import { useAuth } from '../AuthContext'; // Import your AuthContext
 
-export default function PatientAppointment({ paciente, onClose }) {
-
+export default function PatientAppointment({paciente, onClose }) {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
+    const [consultaInformacoes, setconsultaInformacoes] = useState('');
+
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
@@ -164,7 +165,6 @@ export default function PatientAppointment({ paciente, onClose }) {
         }
     };
 
-
     const handleSubmit = async () => {
         try {
             const response = await axios.post('http://localhost:5001/predict', { symptoms: consultaData.selectedSymptoms });
@@ -182,8 +182,6 @@ export default function PatientAppointment({ paciente, onClose }) {
         }
     };
     
-
-
     const handleTabClick = (tab) => {
         setSelectedTab(tab);
     };
@@ -258,7 +256,6 @@ export default function PatientAppointment({ paciente, onClose }) {
           const consultaId = responseConsulta.data.consultaId;
           const consultaIdCloud = responseConsultaCloud.data.consultaId;
 
-        
           const pacienteId = paciente.numeroIdentificacao; // Capture pacienteId from your data
       
           const dataToSave = {
@@ -459,12 +456,7 @@ export default function PatientAppointment({ paciente, onClose }) {
         switch (selectedTab) {
             case "Informações":
                 return (
-                    <Informacoes ref={informacoesRef}
-                        vitals={vitals}
-                        setVitals={setVitals}
-                        comments={comments}
-                        setComments={setComments}
-                    />
+                    <InformacoesMedico paciente={paciente}/>
                 );
             case "Consulta":
 

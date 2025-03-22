@@ -75,15 +75,16 @@ function Login() {
         navigate('/homeAdm');
       } else if (employee.employeeType === 'Tecnico de Laboratorio') {
         navigate('/homeTecnico');
+      }else if (employee.employeeType === 'Enfermeiro') {
+        navigate('/homeEnfermeiro');
       }
+
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message);
+      alert("Funcionário não encontrado.")
     }
   };
   
-
-
-
   const style = {
     container: {
       display: 'flex',

@@ -125,7 +125,8 @@ export default function NovaConsulta({ onClose }) {
                 pacienteId: numeroIdentificacao,
                 pacienteNome: formData.nomeCompleto,
                 medicoId: funcionarioId,
-                state: 'open',
+                /*                                                    */
+                state: 'triage',
                 password: hashedPassword,
             });
     
