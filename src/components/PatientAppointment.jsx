@@ -10,12 +10,10 @@ import InformacoesMedico from './InformacoesMedico.jsx';
 import Consulta from './Consulta.js';
 import { useAuth } from '../AuthContext'; // Import your AuthContext
 
-export default function PatientAppointment({paciente, onClose }) {
+export default function PatientAppointment({ paciente, onClose }) {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
-    const [consultaInformacoes, setconsultaInformacoes] = useState('');
-
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
@@ -170,7 +168,7 @@ export default function PatientAppointment({paciente, onClose }) {
             const response = await axios.post('http://localhost:5001/predict', { symptoms: consultaData.selectedSymptoms });
             const data = response.data;
             setPredictions(data);
-    
+
             // Filtrar e salvar as predições positivas
             const positives = Object.keys(data)
                 .filter(disease => data[disease] === 1)
@@ -181,7 +179,7 @@ export default function PatientAppointment({paciente, onClose }) {
             console.error('Error fetching predictions:', error);
         }
     };
-    
+
     const handleTabClick = (tab) => {
         setSelectedTab(tab);
     };
@@ -238,55 +236,60 @@ export default function PatientAppointment({paciente, onClose }) {
     };
 
     const handleFinalizarClick = async () => {
+
         try {
-          const responseConsulta = await axios.get('http://localhost:5000/api/consultas/findConsulta', {
-            params: {
-              pacienteID: paciente.numeroIdentificacao, // Ensure this matches the backend parameter
-              medico: state.user.nomeCompleto             // Make sure this is the correct doctor ID
-            }
-          });
+            const responseConsulta = await axios.get('http://localhost:5000/api/consultas/findConsulta', {
+                params: {
+                    pacienteId: paciente.numeroIdentificacao, // Ensure this matches the backend parameter
+                    medico: state.user.nomeCompleto             // Make sure this is the correct doctor ID
+                }
+            });
 
-          const responseConsultaCloud = await axios.get('http://localhost:5000/api/consultas/findConsultaCloud', {
-            params: {
-              pacienteID: paciente.numeroIdentificacao, // Ensure this matches the backend parameter
-              medico: state.user.nomeCompleto           // Make sure this is the correct doctor ID
-            }
-          });
-      
-          const consultaId = responseConsulta.data.consultaId;
-          const consultaIdCloud = responseConsultaCloud.data.consultaId;
 
-          const pacienteId = paciente.numeroIdentificacao; // Capture pacienteId from your data
-      
-          const dataToSave = {
-            vitals,
-            comments,
-            consultaData,
-            selectedExams,
-            acceptedDiseases
-          };
-      
-          const response = await axios.put(`http://localhost:5000/api/consultas/update`, {
-            consultaId: consultaId,  // Ensure this matches the backend parameter
-            consultaIdCloud: consultaIdCloud,
-            pacienteId: pacienteId,  // Pass pacienteId for deletion
-            data: dataToSave
-          });
-      
-          if (response.status === 200) {
-            setModalMessage('Consulta registrada com sucesso!');
-            setIsModalOpen(true);
-          } else {
-            setModalMessage('Falha ao registrar consulta!');
-            setIsModalOpen(true);
-          }
+            const responseConsultaCloud = await axios.get('http://localhost:5000/api/consultas/findConsultaCloud', {
+                params: {
+                    pacienteId: paciente.numeroIdentificacao, // Ensure this matches the backend parameter
+                    medico: state.user.nomeCompleto           // Make sure this is the correct doctor ID
+                }
+            });
+
+
+            const consultaId = responseConsulta.data.consultaId;
+            const consultaIdCloud = responseConsultaCloud.data.consultaId;
+
+            console.log("CONSULTA EM CLOUD ID: " + consultaIdCloud)
+
+            const pacienteId = paciente.numeroIdentificacao; // Capture pacienteId from your data
+
+            const dataToSave = {
+                consultaData,
+                selectedExams,
+                acceptedDiseases
+            };
+
+            console.log(dataToSave);
+
+            const response = await axios.put(`http://localhost:5000/api/consultas/update`, {
+                consultaId: consultaId,  // Ensure this matches the backend parameter
+                consultaIdCloud: consultaIdCloud,
+                pacienteId: pacienteId,  // Pass pacienteId for deletion
+                data: dataToSave
+            });
+
+            if (response.status === 200) {
+                setModalMessage('Consulta registrada com sucesso!');
+                setIsModalOpen(true);
+            } else {
+                setModalMessage('Falha ao registrar consulta!');
+                setIsModalOpen(true);
+            }
         } catch (error) {
-          console.error('Error saving consulta:', error);
-          alert('An error occurred while saving the consulta.');
+            console.error('Error saving consulta:', error);
+            alert('An error occurred while saving the consulta.');
         }
-      };
-      
-    
+    };
+
+
     const consulta = {
         container: {
             margin: 20,
@@ -456,7 +459,7 @@ export default function PatientAppointment({paciente, onClose }) {
         switch (selectedTab) {
             case "Informações":
                 return (
-                    <InformacoesMedico paciente={paciente}/>
+                    <InformacoesMedico paciente={paciente} />
                 );
             case "Consulta":
 

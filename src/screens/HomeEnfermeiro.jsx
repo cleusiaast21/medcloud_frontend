@@ -96,8 +96,15 @@ export default function HomeEnfermeiro() {
                 }
             });
 
-            const consultaId = responseConsulta.data.consultaId;
+            const responseConsultaCloud = await axios.get('http://localhost:5000/api/consultas/findConsultaEnfermeiroCloud', {
+                params: {
+                    pacienteId: selectedConsulta.pacienteId, // Ensure this matches the backend parameter
+                    medico: selectedConsulta.medico
+                }
+            });
 
+            const consultaId = responseConsulta.data.consultaId;
+            const consultaIdCloud = responseConsultaCloud.data.consultaId;
             const pacienteId = selectedConsulta.pacienteId; // Capture pacienteId from your data
 
             const dataToSave = {
@@ -107,6 +114,7 @@ export default function HomeEnfermeiro() {
 
             const response = await axios.put(`http://localhost:5000/api/consultas/updateEnfermeiro`, {
                 consultaId: consultaId,  // Ensure this matches the backend parameter
+                consultaIdCloud: consultaIdCloud,  // Ensure this matches the backend parameter
                 pacienteId: pacienteId,  // Pass pacienteId for deletion
                 data: dataToSave,
                 state: 'open',

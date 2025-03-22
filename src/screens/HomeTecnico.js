@@ -129,6 +129,46 @@ export default function Home() {
         },
     };
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
+    const modalStyles = {
+        modalBackdrop: {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dimmed background
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+        },
+        modalContainer: {
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            textAlign: 'center',
+            boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+            width: '400px',
+            zIndex: 1001,
+        },
+        closeButton: {
+            backgroundColor: '#2DA9B5',
+            color: 'white',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+        }
+    };
+
     const handleExamTypeChange = (e, examName) => {
         const selectedType = e.target.value;
         setExamInputs((prev) => ({
@@ -148,7 +188,7 @@ export default function Home() {
     const handleFileUpload = (e, examName) => {
         const file = e.target.files[0];
         if (!file) return;
-    
+
         const reader = new FileReader();
         reader.onloadend = () => {
             const base64String = reader.result.split(",")[1]; // Extract Base64 content
@@ -159,7 +199,7 @@ export default function Home() {
         };
         reader.readAsDataURL(file); // Convert file to Base64
     };
-    
+
 
     const renderExamInput = (examName) => {
         const exam = examInputs[examName];
@@ -213,31 +253,73 @@ export default function Home() {
 
     const handleSendAllResults = async () => {
         try {
+            // Fetch consulta IDs from both local and cloud in parallel
+            const [responseConsulta, responseConsultaCloud] = await Promise.all([
+                axios.get('http://localhost:5000/api/consultas/findConsultaEnfermeiro', {
+                    params: {
+                        pacienteId: selectedConsulta.pacienteId,
+                        medico: selectedConsulta.medico
+                    }
+                }),
+                axios.get('http://localhost:5000/api/consultas/findConsultaEnfermeiroCloud', {
+                    params: {
+                        pacienteId: selectedConsulta.pacienteId,
+                        medico: selectedConsulta.medico
+                    }
+                })
+            ]);
+    
+            const consultaId = responseConsulta.data.consultaId;
+            const consultaIdCloud = responseConsultaCloud.data.consultaId;
+            const pacienteId = selectedConsulta.pacienteId;
+    
+            console.log(`IDs das consultas - Local: ${consultaId}, Cloud: ${consultaIdCloud}, PacienteID: ${pacienteId}`);
+    
+            // Prepare results payload
             const results = Object.entries(examInputs).map(([examName, data]) => ({
-                examName, // Name of the exam
-                type: data.type, // Type of input
-                value: data.value, // Base64-encoded data
-                fileType: data.fileType || null, // MIME type of the file
+                examName,
+                type: data.type,
+                value: data.value,
+                fileType: data.fileType || null,
             }));
     
-            const payload = { results };
-
-            console.log("Resultados: ",payload);
+            const payload = {
+                consultaId,        // Local consulta ID
+                consultaIdCloud,   // Cloud consulta ID
+                pacienteId,        // Patient ID
+                results            // Exam results
+            };
     
+            console.log("Enviando payload:", payload);
+    
+            // Send the results with both IDs in a single request
             const response = await axios.put(
-                `http://localhost:5000/api/consultas/results/${selectedConsulta._id}`,
+                'http://localhost:5000/api/consultas/results',
                 payload
             );
     
-            alert("Resultados actualizados com sucesso!");
-            setSelectedConsulta(null)
-            console.log("Response:", response.data);
+            // Check if update was successful
+            if (response.status === 200) {
+                setModalMessage('Dados salvos com sucesso!');
+                setIsModalOpen(true);
+                setSelectedConsulta(null);
+                
+                // Reload the page after a short delay (optional)
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                setModalMessage('Falha ao salvar os dados.');
+                setIsModalOpen(true);
+            }
+    
         } catch (error) {
-            console.error("Error uploading results:", error.response || error);
-            alert("Failed to upload results.");
+            console.error("Erro ao enviar resultados:", error.response || error);
+            alert("Falha ao enviar resultados.");
         }
     };
     
+
     // Content rendering based on selected option
     switch (selectedOption) {
         case "Painel":
@@ -289,8 +371,16 @@ export default function Home() {
                                 onClick={() => handleSendAllResults()}
                                 disabled={!Object.values(examInputs).some(input => input?.value)}
                             >
-                                Enviar 
+                                Enviar
                             </button>
+                        </div>
+                    )}
+
+                    {isModalOpen && (
+                        <div style={modalStyles.modalBackdrop}>
+                            <div style={modalStyles.modalContainer}>
+                                <p>{modalMessage}</p>
+                            </div>
                         </div>
                     )}
 

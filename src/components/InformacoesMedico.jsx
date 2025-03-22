@@ -85,7 +85,6 @@ function Informacoes({ paciente }) {
 
     useEffect(() => {
         const fetchConsultaDetails = async () => {
-            console.log("🚀 Fetching data for pacienteId:", paciente.numeroIdentificacao);
 
             if (!paciente.numeroIdentificacao) return;
 
@@ -93,9 +92,7 @@ function Informacoes({ paciente }) {
 
             try {
                 const response = await axios.get(`http://localhost:5000/api/consultas/retrieveInformacoes/${pacienteId}`);
-                console.log("✅ RESPONSE:", response.data);
                 setConsultaData(response.data);
-                console.log("✅ Consulta Data:", consultaData);
 
             } catch (error) {
                 console.error('Error fetching consulta details:', error);
@@ -103,7 +100,7 @@ function Informacoes({ paciente }) {
         };
 
         fetchConsultaDetails();
-    }, []); // ✅ Run only once
+    }, []); 
 
 
     return (

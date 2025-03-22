@@ -20,6 +20,46 @@ const EmployeeRegistration = () => {
         password: 'Medcloud@2024'
     });
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
+    const modalStyles = {
+        modalBackdrop: {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dimmed background
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+        },
+        modalContainer: {
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            textAlign: 'center',
+            boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+            width: '400px',
+            zIndex: 1001,
+        },
+        closeButton: {
+            backgroundColor: '#2DA9B5',
+            color: 'white',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+        }
+    };
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -34,10 +74,22 @@ const EmployeeRegistration = () => {
 
         try {
             await axios.post('http://localhost:5000/api/employees', formData);
-            alert('Employee registered successfully');
+            setModalMessage('Consulta registrada com sucesso!');
+            setIsModalOpen(true);
+
+            setTimeout(() => {
+                setIsModalOpen(false);
+                window.location.reload(); // Refresh the page
+            }, 2000);
         } catch (error) {
             console.error('Error registering employee:', error);
-            alert('Error registering employee');
+            setModalMessage('Falha ao registrar consulta!');
+            setIsModalOpen(true);
+
+            // Close the modal after 2 seconds but don't refresh
+            setTimeout(() => {
+                setIsModalOpen(false);
+            }, 2000);
         }
     };
 
@@ -106,6 +158,14 @@ const EmployeeRegistration = () => {
                     <div style={{ display: "flex", margin: 20, justifyContent: "end" }}>
                         <button style={consulta.button} type="submit" onClick={handleSubmit}>Salvar</button>
                     </div>
+
+                    {isModalOpen && (
+                        <div style={modalStyles.modalBackdrop}>
+                            <div style={modalStyles.modalContainer}>
+                                <p>{modalMessage}</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
