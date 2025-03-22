@@ -4,7 +4,7 @@ import pfp from "../assets/userIcon.jpg";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import axios from "axios";
 import Modal from "react-modal";
-import { useAuth } from '../AuthContext'; // Import your AuthContext
+import { useAuth } from "../AuthContext"; // Import your AuthContext
 
 Modal.setAppElement("#root"); // Evita warnings no console
 
@@ -18,7 +18,8 @@ export default function Patients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [patientAppointments, setPatientAppointments] = useState([]);
-  const { state } = useAuth(); 
+  const [consultas, setConsultas] = useState([]);
+  const { state } = useAuth();
 
   const closeModal = () => {
     setModalIsOpen(false);
@@ -26,12 +27,11 @@ export default function Patients() {
   };
 
   const fetchPatientAppointments = async (patientId) => {
-
-    
     try {
       const response = await axios.get(
         `http://localhost:5000/api/consultas/consultasPaciente/${patientId}`
       );
+      console.log("Consulta da Alciana: " + response.data);
       return response.data; // Retorna as consultas do paciente
     } catch (error) {
       console.error("Erro ao buscar consultas do paciente:", error);
@@ -44,7 +44,9 @@ export default function Patients() {
 
     fetchPatientAppointments(patient.numeroIdentificacao)
       .then((appointments) => {
+        console.log("Consultas do paciente:", appointments[0]);
         setPatientAppointments(appointments); // Atualiza o estado com as consultas
+
         setModalIsOpen(true); // Abre o modal
       })
       .catch((error) => {
@@ -456,23 +458,23 @@ export default function Patients() {
                       >
                         <li>
                           <strong>Frequência Cardíaca:</strong>{" "}
-                          {appointment.vitals.heartRate}
+                          {appointment?.vitals?.heartRate ?? "N/A"}
                         </li>
                         <li>
-                          <strong>Frequência Repiratória:</strong>{" "}
-                          {appointment.vitals.respiratoryRate}
+                          <strong>Frequência Respiratória:</strong>{" "}
+                          {appointment?.vitals?.respiratoryRate ?? "N/A"}
                         </li>
                         <li>
                           <strong>Pressão Arterial:</strong>{" "}
-                          {appointment.vitals.bloodPressure}
+                          {appointment?.vitals?.bloodPressure ?? "N/A"}
                         </li>
                         <li>
                           <strong>Temperatura:</strong>{" "}
-                          {appointment.vitals.temperature}
+                          {appointment?.vitals?.temperature ?? "N/A"}
                         </li>
                         <li>
                           <strong>Peso:</strong>{" "}
-                          {appointment.vitals.weight}
+                          {appointment?.vitals?.weight ?? "N/A"}
                         </li>
                       </ul>
                     </div>
@@ -484,47 +486,49 @@ export default function Patients() {
                       >
                         <li>
                           <strong>Doenças:</strong>{" "}
-                          {appointment.comments.doencas}
+                          {appointment?.comments?.doencas ?? "N/A"}
                         </li>
                         <li>
                           <strong>Alergias:</strong>{" "}
-                          {appointment.comments.alergias}
+                          {appointment?.comments?.alergias ?? "N/A"}
                         </li>
                         <li>
                           <strong>Cirurgias:</strong>{" "}
-                          {appointment.comments.cirurgias}
+                          {appointment?.comments?.cirurgias ?? "N/A"}
                         </li>
                         <li>
                           <strong>Internamentos:</strong>{" "}
-                          {appointment.comments.internamentos}
+                          {appointment?.comments?.internamentos ?? "N/A"}
                         </li>
                         <li>
                           <strong>Medicação:</strong>{" "}
-                          {appointment.comments.medicacao}
+                          {appointment?.comments?.medicacao ?? "N/A"}
                         </li>
                         <li>
                           <strong>Antecedentes:</strong>{" "}
-                          {appointment.comments.antecedentes}
+                          {appointment?.comments?.antecedentes ?? "N/A"}
                         </li>
                       </ul>
                     </div>
 
                     <p>
                       <strong>Diagnóstico:</strong>{" "}
-                      {appointment.acceptedDiseases.join(", ")}
+                      {appointment?.acceptedDiseases?.join(", ") ?? "N/A"}
                     </p>
                     <p>
                       <strong>Sintomas Selecionados:</strong>{" "}
-                      {appointment.consultaData.selectedSymptoms.join(", ")}
+                      {appointment?.consultaData?.selectedSymptoms?.join(
+                        ", "
+                      ) ?? "N/A"}
                     </p>
                     <p>
                       <strong>Exames Selecionados:</strong>{" "}
-                      {appointment.selectedExams.join(", ")}
+                      {appointment?.selectedExams?.join(", ") ?? "N/A"}
                     </p>
                     <div>
                       <strong>Resultados:</strong>
                       <ul style={{ listStyleType: "disc", marginLeft: "20px" }}>
-                        {appointment.results.map((result, i) => (
+                        {appointment?.results?.map((result, i) => (
                           <li key={i} style={{ marginBottom: "10px" }}>
                             <strong>Exame:</strong> {result.examName}
                             <div style={{ marginTop: "10px" }}>
@@ -541,7 +545,14 @@ export default function Patients() {
                                 />
                               )}
                               {result.type === "pdf" && (
-                                <div style={{ marginTop: "10px", border: "1px solid #ddd", borderRadius: "8px", overflow: "hidden" }}>
+                                <div
+                                  style={{
+                                    marginTop: "10px",
+                                    border: "1px solid #ddd",
+                                    borderRadius: "8px",
+                                    overflow: "hidden",
+                                  }}
+                                >
                                   <iframe
                                     src={`data:application/pdf;base64,${result.value}`}
                                     style={{
@@ -564,9 +575,9 @@ export default function Patients() {
                                     boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
                                   }}
                                 >
-                                  {isBase64(result.value)
-                                    ? atob(result.value)
-                                    : result.value}
+                                  {result?.type === "text" && (
+                                    <div>{result.value}</div>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -574,7 +585,6 @@ export default function Patients() {
                         ))}
                       </ul>
                     </div>
-                    
                   </li>
                 ))}
               </ul>
