@@ -12,6 +12,7 @@ export default function Painel() {
     const funcionarioId = state.user.funcionarioId;
     const [patients, setPatients] = useState({}); // State to store patient details
     const [selectedPatient, setSelectedPatient] = useState(null); // State for selected patient
+    const [patientId, setpatientId] = useState(null); // State for selected patient
     const [pacienteInfo, setpacienteInfo] = useState(null); // State for selected patient
     const [showModal, setShowModal] = useState(false);
     const [resultConsulta, setResultConsulta] = useState({})
@@ -20,6 +21,7 @@ export default function Painel() {
     const handleSeeResults = (position) => {
         setShowModal(true);
         setResultConsulta(position);
+        setpatientId(position.pacienteId)
     };
 
     useEffect(() => {
@@ -191,21 +193,28 @@ export default function Painel() {
     const handleUpdateDiagnostico = () => {
         // Split the diagnoses into an array by commas
         const acceptedDiseases = diagnostico.split(",").map((d) => d.trim());
-
+    
+        const payload = {
+            pacienteId: patientId, // Send pacienteId
+            medico: state.user.nomeCompleto, // Send medico
+            acceptedDiseases, // Send diagnoses
+        };
+    
         // Send the update to the backend
         axios
-            .put(`http://localhost:5000/api/consultas/addDiagnostic/${resultConsulta._id}`, {
-                acceptedDiseases,
-            })
+            .put(`http://localhost:5000/api/consultas/addDiagnostic/${resultConsulta._id}`, payload)
             .then((response) => {
-
-                setShowModal(false)
-                alert("Diagnóstico atualizado com sucesso:", response.data);
+                setShowModal(false);
+                alert("Diagnóstico atualizado com sucesso!", response.data);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             })
             .catch((error) => {
                 console.error("Erro ao atualizar diagnóstico:", error);
             });
     };
+    
 
 
     return (

@@ -18,6 +18,9 @@ export default function PatientAppointment({ paciente, onClose }) {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         onClose(); // Call the parent component's close function
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
     };
 
     const modalStyles = {

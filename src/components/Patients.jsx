@@ -4,6 +4,7 @@ import pfp from "../assets/userIcon.jpg";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import axios from "axios";
 import Modal from "react-modal";
+import { useAuth } from '../AuthContext'; // Import your AuthContext
 
 Modal.setAppElement("#root"); // Evita warnings no console
 
@@ -17,6 +18,7 @@ export default function Patients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [patientAppointments, setPatientAppointments] = useState([]);
+  const { state } = useAuth(); 
 
   const closeModal = () => {
     setModalIsOpen(false);
@@ -24,6 +26,8 @@ export default function Patients() {
   };
 
   const fetchPatientAppointments = async (patientId) => {
+
+    
     try {
       const response = await axios.get(
         `http://localhost:5000/api/consultas/consultasPaciente/${patientId}`
@@ -445,11 +449,68 @@ export default function Patients() {
                     <p>
                       <strong>Médico:</strong> {appointment.medico}
                     </p>
+                    <div>
+                      <strong>Sinais Vitais:</strong>
+                      <ul
+                        style={{ listStyleType: "circle", marginLeft: "20px" }}
+                      >
+                        <li>
+                          <strong>Frequência Cardíaca:</strong>{" "}
+                          {appointment.vitals.heartRate}
+                        </li>
+                        <li>
+                          <strong>Frequência Repiratória:</strong>{" "}
+                          {appointment.vitals.respiratoryRate}
+                        </li>
+                        <li>
+                          <strong>Pressão Arterial:</strong>{" "}
+                          {appointment.vitals.bloodPressure}
+                        </li>
+                        <li>
+                          <strong>Temperatura:</strong>{" "}
+                          {appointment.vitals.temperature}
+                        </li>
+                        <li>
+                          <strong>Peso:</strong>{" "}
+                          {appointment.vitals.weight}
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <strong>Comentários:</strong>
+                      <ul
+                        style={{ listStyleType: "circle", marginLeft: "20px" }}
+                      >
+                        <li>
+                          <strong>Doenças:</strong>{" "}
+                          {appointment.comments.doencas}
+                        </li>
+                        <li>
+                          <strong>Alergias:</strong>{" "}
+                          {appointment.comments.alergias}
+                        </li>
+                        <li>
+                          <strong>Cirurgias:</strong>{" "}
+                          {appointment.comments.cirurgias}
+                        </li>
+                        <li>
+                          <strong>Internamentos:</strong>{" "}
+                          {appointment.comments.internamentos}
+                        </li>
+                        <li>
+                          <strong>Medicação:</strong>{" "}
+                          {appointment.comments.medicacao}
+                        </li>
+                        <li>
+                          <strong>Antecedentes:</strong>{" "}
+                          {appointment.comments.antecedentes}
+                        </li>
+                      </ul>
+                    </div>
+
                     <p>
-                      <strong>Estado:</strong> {appointment.state}
-                    </p>
-                    <p>
-                      <strong>Doenças Aceitas:</strong>{" "}
+                      <strong>Diagnóstico:</strong>{" "}
                       {appointment.acceptedDiseases.join(", ")}
                     </p>
                     <p>
@@ -513,37 +574,7 @@ export default function Patients() {
                         ))}
                       </ul>
                     </div>
-                    <div>
-                      <strong>Comentários:</strong>
-                      <ul
-                        style={{ listStyleType: "circle", marginLeft: "20px" }}
-                      >
-                        <li>
-                          <strong>Doenças:</strong>{" "}
-                          {appointment.comments.doencas}
-                        </li>
-                        <li>
-                          <strong>Alergias:</strong>{" "}
-                          {appointment.comments.alergias}
-                        </li>
-                        <li>
-                          <strong>Cirurgias:</strong>{" "}
-                          {appointment.comments.cirurgias}
-                        </li>
-                        <li>
-                          <strong>Internamentos:</strong>{" "}
-                          {appointment.comments.internamentos}
-                        </li>
-                        <li>
-                          <strong>Medicação:</strong>{" "}
-                          {appointment.comments.medicacao}
-                        </li>
-                        <li>
-                          <strong>Antecedentes:</strong>{" "}
-                          {appointment.comments.antecedentes}
-                        </li>
-                      </ul>
-                    </div>
+                    
                   </li>
                 ))}
               </ul>
