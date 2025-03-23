@@ -606,7 +606,7 @@ export default function PatientAppointment({ paciente, onClose }) {
                 );
             case "Receita":
                 return (
-                    <Receita></Receita>
+                    <Receita paciente={paciente}></Receita>
                 );
             default:
                 return null;
