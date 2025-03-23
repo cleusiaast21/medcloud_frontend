@@ -6,6 +6,7 @@ import Patients from "../components/Patients.jsx";
 import Painel from "../components/Painel.jsx";
 import NovaConsulta from "../components/NovaConsulta.jsx";
 import Estatisticas from "../components/Estatisticas.jsx";
+import Agenda from "../components/Agenda.jsx";
 import { useState } from "react";
 import { useAuth } from '../AuthContext'; // Import your AuthContext
 
@@ -13,7 +14,7 @@ export default function Home() {
 
   const [selectedOption, setSelectedOption] = useState("Painel");
   const [showNovaConsulta, setShowNovaConsulta] = useState(true);
-  const { state } = useAuth(); 
+  const { state } = useAuth();
   let content;
 
   const handleCloseNovaConsulta = () => {
@@ -128,14 +129,14 @@ export default function Home() {
     case "Agenda":
       content = (
 
-          <h1>Agenda</h1>
-     
+        <Agenda></Agenda>
+
       );
       break;
     case "Estatísticas":
       content = (
 
-        <Estatisticas doctorName={state.user.nomeCompleto}/>
+        <Estatisticas doctorName={state.user.nomeCompleto} />
 
       );
       break;

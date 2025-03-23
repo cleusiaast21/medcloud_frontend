@@ -2,13 +2,51 @@ import React, { useState } from "react";
 import jsPDF from "jspdf";
 import "@fontsource/poppins";
 import { useAuth } from "../AuthContext"; // Import your AuthContext
+import axios from 'axios';
 
 export default function Receita({ paciente }) {
   const [showHistory, setShowHistory] = useState(false);
   const [notas, setNotas] = useState(""); // Estado para armazenar a receita
   const { state } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
-  alert(paciente.dataNascimento);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+};
+
+  const modalStyles = {
+    modalBackdrop: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dimmed background
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+    },
+    modalContainer: {
+      backgroundColor: 'white',
+      padding: '20px',
+      borderRadius: '8px',
+      textAlign: 'center',
+      boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+      width: '400px',
+      zIndex: 1001,
+    },
+    closeButton: {
+      backgroundColor: '#2DA9B5',
+      color: 'white',
+      padding: '10px 20px',
+      border: 'none',
+      borderRadius: '5px',
+      cursor: 'pointer',
+      fontWeight: 'bold',
+    }
+  };
 
   const generatePDF = () => {
     const doc = new jsPDF();
@@ -38,10 +76,10 @@ export default function Receita({ paciente }) {
     doc.setFont("helvetica", "normal");
     doc.text(`Nome: ${paciente.nomeCompleto}`, 20, 60);
     doc.text(`Idade: ${idade} anos`, 140, 70); // 🟢 Exibe a idade calculada
-    doc.text("NºHC:", 20, 70);
+    doc.text(`Medico: ${state.user.nomeCompleto}`, 20, 70);
     doc.text(`Data: ${currentDate}`, 140, 60); // 🟢 Here, it shows the current date
 
-    // Receita
+    // Receitaa
     doc.setFontSize(12);
     doc.text("Receita:", 20, 90);
     doc.rect(20, 95, 170, 150);
@@ -67,37 +105,76 @@ export default function Receita({ paciente }) {
     doc.save("receita_medica.pdf");
   };
 
+  const saveReceitaToConsulta = async () => {
+    if (!notas.trim()) {
+      alert("A receita está vazia.");
+      return;
+    }
+
+    try {
+
+      const responseConsulta = await axios.get('http://localhost:5000/api/consultas/findConsultaEnfermeiro', {
+        params: {
+          pacienteId: paciente.numeroIdentificacao, // Ensure this matches the backend parameter
+          medico: state.user.nomeCompleto
+        }
+      });
+
+      const responseConsultaCloud = await axios.get('http://localhost:5000/api/consultas/findConsultaEnfermeiroCloud', {
+        params: {
+          pacienteId: paciente.numeroIdentificacao, // Ensure this matches the backend parameter
+          medico: state.user.nomeCompleto
+        }
+      });
+
+      const consultaId = responseConsulta.data.consultaId;
+      console.log(consultaId);
+
+      const consultaIdCloud = responseConsultaCloud.data.consultaId;
+      console.log(consultaIdCloud);
+
+      const response = await axios.put(`http://localhost:5000/api/consultas/updateReceita`, {
+        consultaId: consultaId,  // Ensure this matches the backend parameter
+        consultaIdCloud: consultaIdCloud,  // Ensure this matches the backend parameter
+        receita: notas,
+      });
+
+      if (response.status === 200) {
+        setModalMessage('Receita salva!');
+        setIsModalOpen(true);
+        // Reload the page after a short delay (optional)
+        
+      } else {
+        setModalMessage('Falha ao salvar receita!');
+        setIsModalOpen(true);
+      }
+    } catch (error) {
+      console.error("Erro ao salvar a receita:", error);
+      alert("Erro ao conectar com o servidor.");
+    }
+  };
+
   const calcularIdade = (dataNascimento) => {
     if (!dataNascimento) return "N/A"; // Caso a data esteja vazia ou indefinida
 
-    let nascimento;
+    // Garante que dataNascimento é um objeto Date
+    const nascimento = new Date(dataNascimento);
 
-    // Verifica se a data está no formato esperado (YYYY-MM-DD)
-    if (dataNascimento.includes("-")) {
-        const [ano, mes, dia] = dataNascimento.split("-").map(Number);
-        nascimento = new Date(ano, mes - 1, dia);
-    } else if (dataNascimento.includes("/")) {
-        // Se a data estiver no formato DD/MM/YYYY
-        const [dia, mes, ano] = dataNascimento.split("/").map(Number);
-        nascimento = new Date(ano, mes - 1, dia);
-    } else {
-        return "Formato inválido"; // Se for um formato inesperado
-    }
+    if (isNaN(nascimento)) return "Formato inválido"; // Verifica se a data é válida
 
     const hoje = new Date();
     let idade = hoje.getFullYear() - nascimento.getFullYear();
-    
+
     // Ajusta se o aniversário ainda não ocorreu este ano
     if (
-        hoje.getMonth() < nascimento.getMonth() ||
-        (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate())
+      hoje.getMonth() < nascimento.getMonth() ||
+      (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate())
     ) {
-        idade--;
+      idade--;
     }
 
     return idade;
-};
-
+  };
 
   return (
     <div
@@ -167,33 +244,64 @@ export default function Receita({ paciente }) {
                 style={{
                   resize: "none",
                   width: "85%",
-                  height: "300px",
+                  height: "200px",
                   border: "0.5px solid rgba(80,80,80,0.2)",
                   borderRadius: 5,
                 }}
               />
             </div>
 
-            <button
-              onClick={generatePDF}
-              style={{
-                background: "#2DA9B5",
-                color: "white",
-                padding: 10,
-                borderRadius: 5,
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Exportar em PDF
-            </button>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <button
+                onClick={saveReceitaToConsulta}
+                style={{
+                  background: "#2DA9B5",
+                  color: "white",
+                  padding: 10,
+                  borderRadius: 5,
+                  border: "none",
+                  cursor: "pointer",
+                  width: "20%",
+                  marginLeft: "auto",
+                }}
+              >
+                Salvar Receita
+              </button>
+
+              <button
+                onClick={generatePDF}
+                style={{
+                  background: "#2DA9B5",
+                  color: "white",
+                  padding: 10,
+                  borderRadius: 5,
+                  border: "none",
+                  cursor: "pointer",
+                  width: "20%",
+                  marginLeft: "auto",
+                }}
+              >
+                Exportar em PDF
+              </button>
+            </div>
+
+            {isModalOpen && (
+                <div style={modalStyles.modalBackdrop}>
+                    <div style={modalStyles.modalContainer}>
+                        <p>{modalMessage}</p>
+                        <button style={modalStyles.closeButton} onClick={handleCloseModal}>OK</button>
+                    </div>
+                </div>
+            )}
+
+
           </>
         ) : (
           <div>
             <h3 style={{ color: "#2DA9B5", fontWeight: "bold", fontSize: 16 }}>
               Histórico de Receitas
             </h3>
-            <p>Histórico de receitas não implementado ainda.</p>
+            <p>Nenhuma receita.</p>
           </div>
         )}
       </div>
